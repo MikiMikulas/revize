@@ -1,0 +1,1140 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revizní zprávy</title>
+<style>
+:root{
+  --bg:#f3f5f8; --panel:#ffffff; --panel-2:#f8f9fb; --ink:#111827; --ink-2:#374151; --muted:#6b7280; --line:#e5e7eb; --line-2:#d1d5db;
+  --accent:#2563eb; --accent-2:#1d4ed8; --accent-ink:#ffffff; --soft:#eff4ff; --soft-ink:#1e40af;
+  --ok:#15803d; --ok-soft:#ecfdf3; --bad:#dc2626; --bad-soft:#fef2f2; --idle:#9ca3af;
+  --input:#ffffff; --shadow:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.06); --shadow-lg:0 10px 30px rgba(16,24,40,.12);
+  --r:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1218; --panel:#171b23; --panel-2:#1c212b; --ink:#f3f4f6; --ink-2:#d1d5db; --muted:#9aa3b2; --line:#272d39; --line-2:#363d4b;
+    --accent:#5b8cff; --accent-2:#7aa2ff; --accent-ink:#0b1020; --soft:#1a2440; --soft-ink:#a9c1ff;
+    --ok:#4ade80; --ok-soft:#12261b; --bad:#f87171; --bad-soft:#2d1717; --idle:#5b6472;
+    --input:#11151c; --shadow:0 1px 2px rgba(0,0,0,.4); --shadow-lg:0 10px 30px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1218; --panel:#171b23; --panel-2:#1c212b; --ink:#f3f4f6; --ink-2:#d1d5db; --muted:#9aa3b2; --line:#272d39; --line-2:#363d4b;
+  --accent:#5b8cff; --accent-2:#7aa2ff; --accent-ink:#0b1020; --soft:#1a2440; --soft-ink:#a9c1ff;
+  --ok:#4ade80; --ok-soft:#12261b; --bad:#f87171; --bad-soft:#2d1717; --idle:#5b6472;
+  --input:#11151c; --shadow:0 1px 2px rgba(0,0,0,.4); --shadow-lg:0 10px 30px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",sans-serif;-webkit-font-smoothing:antialiased}
+svg.ic{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- horní lišta ---------- */
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--panel) 88%,transparent);backdrop-filter:saturate(1.6) blur(10px);-webkit-backdrop-filter:saturate(1.6) blur(10px);border-bottom:1px solid var(--line)}
+.bar{max-width:1440px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#7c3aed);color:#fff;display:grid;place-items:center;flex:none}
+.logo svg{width:18px;height:18px;fill:#fff;stroke:none}
+.brand h1{font-size:15px;margin:0;font-weight:650;letter-spacing:-.01em}
+.brand .sub{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46vw}
+.grow{flex:1}
+.actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+
+/* kroky */
+.steps{max-width:1440px;margin:0 auto;padding:0 20px;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.steps button{display:flex;align-items:center;gap:8px;border:0;background:none;color:var(--muted);padding:10px 12px 11px;font:inherit;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.steps button .n{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:600;background:var(--panel-2);border:1px solid var(--line-2);color:var(--muted)}
+.steps button:hover{color:var(--ink)}
+.steps button.on{color:var(--ink);border-bottom-color:var(--accent)}
+.steps button.on .n{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.steps .cnt{font-size:11px;font-weight:600;padding:1px 7px;border-radius:10px;background:var(--panel-2);color:var(--muted);border:1px solid var(--line)}
+.steps .cnt.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+
+main{padding:22px 20px 80px;max-width:1440px;margin:0 auto}
+.ph{display:flex;align-items:flex-end;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.ph h2{font-size:22px;margin:0;letter-spacing:-.02em;font-weight:680}
+.ph p{margin:4px 0 0;color:var(--muted)}
+
+/* ---------- tlačítka ---------- */
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);background:var(--panel);color:var(--ink-2);border-radius:8px;padding:7px 12px;font:inherit;font-weight:500;cursor:pointer;box-shadow:var(--shadow);transition:background .12s,border-color .12s}
+.btn:hover{background:var(--panel-2);border-color:var(--idle)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.pri:hover{background:var(--accent-2)}
+.btn.ghost{background:none;box-shadow:none;border-color:transparent}
+.btn.ghost:hover{background:var(--panel-2)}
+.btn.sm{padding:5px 9px;font-size:13px}
+.ib{display:inline-grid;place-items:center;width:28px;height:28px;border:0;background:none;color:var(--muted);border-radius:7px;cursor:pointer}
+.ib:hover{background:var(--panel-2);color:var(--ink)}
+.ib.del:hover{background:var(--bad-soft);color:var(--bad)}
+.btn:focus-visible,.ib:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- karty a formuláře ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:16px}
+.card-h{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.card-h h3{margin:0;font-size:15px;font-weight:620}
+.card-b{padding:16px 18px}
+.fs{display:grid;grid-template-columns:240px 1fr;gap:24px;padding:20px 22px;border-top:1px solid var(--line)}
+.fs:first-child{border-top:0}
+.fs-h h3{margin:0 0 4px;font-size:14px;font-weight:620}
+.fs-h p{margin:0;color:var(--muted);font-size:13px}
+@media (max-width:860px){.fs{grid-template-columns:1fr;gap:12px}}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px 14px}
+.f{display:flex;flex-direction:column;gap:5px;font-size:12.5px;font-weight:500;color:var(--ink-2)}
+.f.wide{grid-column:1/-1}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--input);border:1px solid var(--line-2);border-radius:8px;padding:7px 10px;min-width:0;transition:border-color .12s,box-shadow .12s}
+input::placeholder,textarea::placeholder{color:var(--idle)}
+input:hover,select:hover,textarea:hover{border-color:var(--idle)}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+textarea{width:100%;resize:vertical;min-height:64px;font-size:13.5px;line-height:1.5}
+.hint{color:var(--muted);font-size:12.5px}
+.calc{display:flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:8px;background:var(--soft);color:var(--soft-ink);font-weight:600;font-size:13px}
+
+/* přepínač */
+.sw{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-size:13.5px;color:var(--ink-2);user-select:none}
+.sw input{position:absolute;opacity:0;width:0;height:0}
+.sw .tr{width:34px;height:20px;border-radius:20px;background:var(--line-2);position:relative;transition:background .15s;flex:none}
+.sw .tr::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+.sw input:checked + .tr{background:var(--accent)}
+.sw input:checked + .tr::after{transform:translateX(14px)}
+.sw input:focus-visible + .tr{outline:2px solid var(--accent);outline-offset:2px}
+.swl{display:flex;flex-direction:column;gap:12px}
+
+/* čip (3f / RCD / testy) */
+.chip{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:38px;padding:3px 8px;border-radius:7px;border:1px solid var(--line-2);font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;user-select:none;background:var(--panel)}
+.chip input{position:absolute;opacity:0;width:0;height:0}
+.chip:has(input:checked){background:var(--soft);border-color:var(--accent);color:var(--soft-ink)}
+.chip:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:1px}
+
+/* segmentový přepínač */
+.seg{display:inline-flex;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:2px}
+.seg label{cursor:pointer}
+.seg input{position:absolute;opacity:0;width:0;height:0}
+.seg span{display:block;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:500;color:var(--muted)}
+.seg input:checked + span{background:var(--panel);color:var(--ink);box-shadow:var(--shadow)}
+.seg input:focus-visible + span{outline:2px solid var(--accent)}
+
+/* ---------- rozvržení s postranním seznamem ---------- */
+.split{display:grid;grid-template-columns:260px 1fr;gap:20px;align-items:start}
+@media (max-width:900px){.split{grid-template-columns:1fr}}
+.side{position:sticky;top:120px}
+@media (max-width:900px){.side{position:static}}
+.side .card-b{padding:8px}
+.bl{display:flex;flex-direction:column;gap:2px}
+.bl button{display:flex;align-items:center;gap:10px;text-align:left;border:0;background:none;color:var(--ink);padding:8px 10px;border-radius:8px;cursor:pointer;font:inherit;width:100%}
+.bl button:hover{background:var(--panel-2)}
+.bl button.on{background:var(--soft);color:var(--soft-ink)}
+.bl .bi{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:var(--panel-2);color:var(--muted);flex:none}
+.bl button.on .bi{background:var(--accent);color:var(--accent-ink)}
+.bl .bt{min-width:0;flex:1}
+.bl .bt b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bl .bt small{color:var(--muted);font-size:12px}
+.bl .wn{font-size:11px;font-weight:700;color:var(--bad);background:var(--bad-soft);border-radius:10px;padding:1px 7px}
+.side-f{display:flex;gap:2px;padding:8px;border-top:1px solid var(--line);align-items:center}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-size:15px;margin-bottom:4px}
+
+/* ---------- tabulka obvodů ---------- */
+.tw{overflow-x:auto}
+table.t{width:100%;border-collapse:separate;border-spacing:0}
+table.t th{position:sticky;top:0;background:var(--panel-2);font-size:11.5px;color:var(--muted);text-align:left;font-weight:600;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap;text-transform:uppercase;letter-spacing:.03em}
+table.t th:first-child{padding-left:18px}
+table.t td{padding:5px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.t td:first-child{padding-left:18px}
+table.t td input[type=text]{width:100%;border-color:transparent;background:transparent;padding:6px 8px}
+table.t td input[type=text]:hover{border-color:var(--line-2);background:var(--input)}
+table.t td input[type=text]:focus{border-color:var(--accent);background:var(--input)}
+table.t tr:hover td{background:color-mix(in srgb,var(--panel-2) 70%,transparent)}
+table.t tr.hd td{background:var(--panel-2)}
+table.t tr.hd input[type=text]{font-weight:600;color:var(--ink-2)}
+table.t td.oz input{font-weight:650}
+.ra{display:flex;gap:0;opacity:.35;transition:opacity .12s;justify-content:flex-end}
+tr:hover .ra,.ra:focus-within{opacity:1}
+@media (hover:none){.ra{opacity:1}}
+.tfoot{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 18px}
+.bulk{display:flex;flex-wrap:wrap;gap:10px;align-items:end;background:var(--soft);padding:14px 18px;border-top:1px solid var(--line)}
+
+/* ---------- karty měření ---------- */
+.mgroup{display:flex;align-items:center;gap:10px;margin:22px 2px 8px;font-size:12px;font-weight:650;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.mgroup::after{content:"";flex:1;height:1px;background:var(--line)}
+.mc{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);margin-bottom:8px;overflow:hidden}
+.mc::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--idle)}
+.mc.s-ok::before{background:var(--ok)}
+.mc.s-bad::before{background:var(--bad)}
+.mc.s-bad{border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
+.mc.s-x{opacity:.55;box-shadow:none}
+.mc-h{display:flex;align-items:center;gap:12px;padding:10px 14px 10px 18px;flex-wrap:wrap}
+.mc-id{display:flex;align-items:baseline;gap:10px;min-width:0;flex:1}
+.mc-id b{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.mc-id span{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tag{font-size:10.5px;font-weight:700;padding:2px 6px;border-radius:5px;background:var(--panel-2);color:var(--muted);border:1px solid var(--line);letter-spacing:.03em}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.pill.ok{color:var(--ok);background:var(--ok-soft)}
+.pill.bad{color:var(--bad);background:var(--bad-soft)}
+.pill svg.ic{width:13px;height:13px}
+.mc-b{padding:4px 14px 14px 18px;display:flex;flex-direction:column;gap:10px}
+.fr{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+.ig{display:inline-flex;align-items:stretch;border:1px solid var(--line-2);border-radius:8px;background:var(--input);overflow:hidden;transition:border-color .12s,box-shadow .12s}
+.ig:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+.ig span,.ig em{display:flex;align-items:center;padding:0 8px;font-size:12px;color:var(--muted);background:var(--panel-2);font-style:normal;white-space:nowrap}
+.ig span{border-right:1px solid var(--line);font-weight:600;color:var(--ink-2)}
+.ig em{border-left:1px solid var(--line)}
+.ig input{border:0;border-radius:0;width:68px;padding:6px 8px;box-shadow:none!important;background:transparent}
+.ig input.w{width:220px}
+.ig input.s{width:52px}
+.rcd{display:grid;grid-template-columns:64px repeat(4,minmax(70px,96px));gap:6px;align-items:center;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:10px 12px;width:max-content;max-width:100%;overflow-x:auto}
+.rcd .h{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.rcd input[type=text]{width:100%;padding:5px 7px}
+.rcd-w{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+
+/* ---------- kapitoly ---------- */
+.sec{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;background:var(--panel);overflow:hidden}
+.sec-h{display:flex;gap:10px;align-items:center;padding:8px 10px 8px 14px;background:var(--panel-2);border-bottom:1px solid var(--line)}
+.sec-h input[type=text]{flex:1;font-weight:600;background:transparent;border-color:transparent}
+.sec-h input[type=text]:hover{border-color:var(--line-2);background:var(--input)}
+.sec textarea{border:0;border-radius:0;padding:12px 14px;box-shadow:none!important;background:var(--panel)}
+.sec.off{opacity:.55}
+.sec.off .sec-h{border-bottom:0}
+.sec .special{display:flex;gap:8px;align-items:center;color:var(--soft-ink);background:var(--soft);font-size:12.5px;padding:8px 14px;border-top:1px solid var(--line)}
+.sec .auto{flex:1;font-weight:600;padding:6px 10px;display:flex;align-items:center;gap:8px}
+.tokens{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tokens code{font:600 12px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--soft);color:var(--soft-ink);padding:2px 6px;border-radius:5px}
+
+/* ---------- náhled ---------- */
+.pv{display:grid;grid-template-columns:320px 1fr;gap:20px;align-items:start}
+@media (max-width:1000px){.pv{grid-template-columns:1fr}}
+.pv .side{top:120px}
+.exp{display:flex;flex-direction:column;gap:8px}
+.exp .btn{justify-content:flex-start}
+.wl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.wl li{display:flex;gap:8px;font-size:13px;color:var(--bad);background:var(--bad-soft);padding:7px 10px;border-radius:8px}
+.okbox{display:flex;gap:8px;align-items:center;color:var(--ok);background:var(--ok-soft);padding:9px 12px;border-radius:8px;font-weight:600;font-size:13px}
+.paper-wrap{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);padding:28px 16px;overflow-x:auto}
+.paper{background:#fff;color:#000;font:11pt/1.25 "Times New Roman",Times,serif;padding:2cm;max-width:21cm;margin:0 auto;box-shadow:0 4px 18px rgba(0,0,0,.12);border-radius:2px;tab-size:6}
+.paper p{margin:0;white-space:pre-wrap;min-height:1.25em}
+
+/* ---------- notifikace ---------- */
+.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);opacity:0;background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);transition:all .2s;z-index:50;display:flex;gap:8px;align-items:center;pointer-events:none}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.saved{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.saved i{width:7px;height:7px;border-radius:50%;background:var(--ok);display:inline-block}
+@media (max-width:640px){.bar{padding:10px 16px}.steps,main{padding-left:16px;padding-right:16px}.btn .lbl{display:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="bar">
+    <div class="brand">
+      <div class="logo"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+      <div style="min-width:0"><h1>Revizní zprávy</h1><div class="sub" id="sub"></div></div>
+    </div>
+    <span class="grow"></span>
+    <span class="saved" id="saved"><i></i>Uloženo</span>
+    <div class="actions">
+      <button class="btn ghost sm" data-act="new" title="Nová zpráva"><svg class="ic" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg><span class="lbl">Nová</span></button>
+      <button class="btn ghost sm" data-act="open" title="Otevřít projekt (.json)"><svg class="ic" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span class="lbl">Otevřít</span></button>
+      <button class="btn ghost sm" data-act="saveJson" title="Uložit projekt do souboru (.json)"><svg class="ic" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg><span class="lbl">Uložit</span></button>
+      <button class="btn pri" data-act="docx"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span class="lbl">Stáhnout Word</span></button>
+    </div>
+    <input type="file" id="fileIn" accept=".json,application/json" hidden>
+  </div>
+  <nav class="steps" id="tabs"></nav>
+</header>
+<main id="app"></main>
+<div class="toast" id="toast"></div>
+<datalist id="dl-mereno">
+  <option value="měřeno v rozváděči a na konci jednotlivých okruhů">
+  <option value="měřeno na připojovacích svorkách rozváděče">
+  <option value="měřeno na připojovacích svorkách elektrorozvodného jádra">
+  <option value="měřeno v elektrorozvodném jádře a na konci jednotlivých okruhů">
+</datalist>
+<datalist id="dl-slovo"><option value="jištění"><option value="typ"><option value="hlavní jistič – typ"><option value="hlavní vypínač – typ"><option value="přepěťová ochrana – typ"></datalist>
+<div id="dls"></div>
+
+<!-- ============ CORE: data, text generation, docx ============ -->
+<script id="core">
+const uid = () => Math.random().toString(36).slice(2, 9);
+const clone = o => JSON.parse(JSON.stringify(o));
+
+// ---------- čísla ----------
+const num = v => { if (v == null) return NaN; const s = String(v).replace(',', '.').replace(/[<>=\s]/g, ''); return s === '' ? NaN : parseFloat(s); };
+const cz = v => String(v ?? '').trim().replace(/\./g, ',');
+const has = v => v != null && String(v).trim() !== '';
+
+// ---------- rozbor přístroje (jistič / chránič) ----------
+function parseDevice(pristroj, oz) {
+  const s = pristroj || '';
+  const r = { char: null, In: null, poles: null, rcd: false, idn: 30 };
+  const m = s.match(/(?:^|[^A-Za-z0-9])([BCD])\s?(\d{1,3})(?:\s*A)?\s*\/\s*([1-4])/i) || s.match(/(?:^|[^A-Za-z0-9])([BCD])\s?(\d{1,3})\b/i);
+  if (m) { r.char = m[1].toUpperCase(); r.In = +m[2]; if (m[3]) r.poles = +m[3]; }
+  if (!r.poles) { const p = s.match(/\d\s*\/\s*([1-4])\s*N?\b/i); if (p) r.poles = +p[1]; }
+  const d = s.match(/\/\s*(0\d{1,2})(?!\d)/);
+  if (d) { r.rcd = true; r.idn = Math.round(parseInt(d[1], 10) / Math.pow(10, d[1].length - 1) * 1000); }
+  if (/chráni|RCD|RCBO/i.test(s) || /^(FI|FAI|FC|QFI)/i.test(oz || '')) r.rcd = true;
+  return r;
+}
+
+// ---------- kontrola naměřených hodnot ----------
+function checkRow(row, board, S) {
+  const w = [], m = row.m || {};
+  if (row.kind !== 'c' || m.state !== 'm') return w;
+  const dev = parseDevice(row.pristroj, row.oz);
+  const k = { B: 5, C: 10, D: 20 }[dev.char];
+  const Uo = num(S.uo) || 230, coef = num(S.zsCoef) || 1;
+  const zs = row.f3 ? [m.zs1, m.zs2, m.zs3] : [m.zs];
+  if (k && dev.In) {
+    const lim = coef * Uo / (k * dev.In);
+    zs.forEach((z, i) => { const v = num(z); if (v > lim) w.push(`Zs${row.f3 ? ' L' + (i + 1) : ''} ${cz(z)} Ω > max ${cz(lim.toFixed(2))} Ω (${dev.char}${dev.In})`); });
+  }
+  const ri = num(m.riso); if (has(m.riso) && ri < 1) w.push(`Riso ${cz(m.riso)} MΩ < 1 MΩ`);
+  if (row.rcd) {
+    const idn = num(m.idn) || dev.idn || 30;
+    [['ac', 'AC'], ['ap', 'A+'], ['am', 'A-']].forEach(([key, lb]) => {
+      const t = m[key]; if (!t || !t.on) return;
+      const i = num(t.i), tt = num(t.t), t5 = num(t.t5), uc = num(t.uc);
+      if (i > idn) w.push(`(${lb}) IΔ ${cz(t.i)} mA > IΔn ${idn} mA`);
+      if (i < idn / 2) w.push(`(${lb}) IΔ ${cz(t.i)} mA < ½ IΔn`);
+      if (tt > 300) w.push(`(${lb}) t ${cz(t.t)} ms > 300 ms`);
+      if (t5 > 40) w.push(`(${lb}) 5×IΔn ${cz(t.t5)} ms > 40 ms`);
+      if (uc > 50) w.push(`(${lb}) Uc ${cz(t.uc)} V > 50 V`);
+    });
+  }
+  return w;
+}
+
+// ---------- výchozí data ----------
+const ZKOUSKY = [
+  'Spojitost ochranných vodičů dle ČSN 33 2000-6 ed.2 čl.6.4.3.2',
+  'Izolační odpor elektrické instalace dle ČSN 33 2000-6 ed.2 čl.6.4.3.3',
+  'Zkoušení izolačních odporů pro potvrzení účinnosti ochrany pomocí SELV, PELV nebo elektrickým oddělením dle ČSN 33 2000-6 ed.2 čl.6.4.3.4',
+  'Zkoušení izolačních odporů pro potvrzení účinnosti odporu/impedance podlahy a stěn dle ČSN 33 2000-6 ed.2 čl.6.4.3.5',
+  'Zkoušení polarity dle ČSN 33 2000-6 ed.2 čl.6.4.3.6',
+  'Zkoušení účinnosti automatického odpojení od zdroje dle ČSN 33 2000-6 ed.2 čl.6.4.3.7',
+  'Zkoušení pro potvrzení účinnosti doplňkové ochrany dle ČSN 33 2000-6 ed.2 čl.6.4.3.8',
+  'Zkouška pořadí fází dle ČSN 33 2000-6 ed.2 čl.6.4.3.9',
+  'Funkční zkoušky dle ČSN 33 2000-6 ed.2 čl.6.4.3.10',
+  'Úbytek napětí dle ČSN 33 2000-6 ed.2 čl.6.4.3.11'
+];
+const ZK_VAL = ['Vyhovuje', 'Vyhovuje', 'Neobsahuje', 'Neobsahuje', 'Vyhovuje', 'Vyhovuje', 'Vyhovuje', 'Vyhovuje', 'Vyhovuje', 'Vyhovuje'];
+
+const PROFILY = [
+  { jmeno: 'Tomáš Kőhler', adresa: 'Ke skalkám 3086/70, 106 00 Praha-Záběhlice', email: 'kohler.t@seznam.cz',
+    evc: 'Ev. č.  TIČR: 2582/24/R-EZ-E2A, Oprávnění ev.č.: 8017/2/14/EZ-M,O,R,Z-E2A',
+    paticka: 'Tomáš Kőhler – Ev. č.  TIČR: 2582/24/R-EZ-E2A, Ke skalkám 3086/70, Praha 10, tel. 603 253 289',
+    pristroje: 'Eurotest XE MI 3102 BT, v.č.14350910, kalibrační list č.: KL109/2023' },
+  { jmeno: 'Jan Korpáš', adresa: 'Sluneční 293, 431 11 Otvice', email: 'jan.korpas@seznam.cz',
+    evc: 'Ev. č.  TIČR: 2577/24/R-EZ-E1A, OBÚ: RT-11/MO-E1, E3-C1, C2-45520/2023\nOprávnění ev.č.: 16911/5/19/EZ-M,O,R,Z-E1A',
+    paticka: 'Jan Korpáš – Ev. č.  TIČR: 2577/24/R-EZ-E1A, OBÚ: RT-11/MO-E1, E3-C1, C2-45520/2023  Otvice  tel. 777 697 429',
+    pristroje: 'Eurotest XD MI 3155, v.č. 20280457, kalibrační list č. 7851/2022\nGround Tester ETCR 2000A+, v.č. 20651195, kalibrační list č. 7495/2022' }
+];
+
+function defaultSections() {
+  return [
+    { id: uid(), type: 'text', on: true, title: 'Předmět revize', text:
+`Byla provedena revize kabelových rozvodů ve společných prostorech bytového domu.
+Revize byla provedena od rozvodnic RE až po zásuvky a světla na chodbách, ve sklepech a garážích.
+Prohlídkou bylo zjištěno, že revidované zařízení je provedeno v souladu s bezpečnostními požadavky příslušných norem pro tato zařízení.
+Prohlídka zař. byla proved. v souladu s NV 190/2022Sb., ČSN 331500 Z1až Z4 a ČSN 332000-6 ed.2.
+Revize se netýká vnější ochrany LPS, elektroměrového rozváděče, spotřebičů, el. nářadí a veškeré ostatní elektroinstalace, která není v revizi uvedená.` },
+    { id: uid(), type: 'text', on: true, title: 'Projektová dokumentace', text:
+`Pro sepsání této revizní zprávy byla předložena:
+-projektová dokumentace č. … od …
+-předchozí revizní zpráva č. … od …
+-EU prohlášení o shodě na rozváděč …` },
+    { id: uid(), type: 'text', on: true, title: 'Ochrana před úrazem el. proudem', text:
+`Ochrana je řešena dle ČSN 33 2000-4-41 ed.3
+Ochrana neživých částí - jako základní ochrana je navržena ochrana automatickým odpojením od zdroje v sítích TN čl. 411.4 a doplňková ochrana – proudovými chrániči čl. 415.1, zvýšená ochrana – ochranou pospojováním čl. 415.2.
+Ochrana živých částí – kryty čl. A.1 a izolací čl. A.2
+Dimenzování a jištění vyhovuje ČSN 33 2000-4-43 ed.2.` },
+    { id: uid(), type: 'text', on: true, title: 'Ochrana před přepětím', text:
+`Přepěťová ochrana v … je typu … – vizuální prohlídka v pořádku.` },
+    { id: uid(), type: 'text', on: true, title: 'Určení vnějších vlivů a prostředí', text:
+`Byl předložen protokol o určení vnějších vlivů č. … od … ze dne …. Prostředí a vnější vlivy jsou ve smyslu ČSN 33 2000-5-51 ed.3+Z1+Z2 považovány za normální, které nezvyšují nebezpečí úrazu elektrickým proudem. Elektrické instalace v místech, které nebezpečí úrazu elektrickým proudem zvyšují (tj. prostory pro laiky s vnějšími vlivy abnormálními ve smyslu TNI 33 2000-5-51:2022, čl. 4.12.3) jsou řešeny s požadavky z ČSN 33 2130 ed.4, ČSN EN 61140 ed.3 a z ČSN EN 50110-1 ed.3. Určené vnější vlivy byly v celém rozsahu revidované instalace ověřeny. Revidovaná elektrická instalace je dle ČSN 33 2000-5-51 ed.3+Z1+Z2 v souladu s požadavky tabulky ZA.1(N) a (51A).` },
+    { id: uid(), type: 'text', on: true, title: 'Uložení, jištění a dimenzování vodičů a kabelů', text:
+`Způsob instalace odpovídá ČSN 33 2000-5-52 ed.2, dimenzování vodičů a kabelů odpovídá ČSN.
+Barevné značení vodičů, popis obvodů, jističů, spínačů a svorek odpovídá ČSN EN IEC 60445 ed.6.` },
+    { id: uid(), type: 'text', on: true, title: 'Elektroinstalace je provedena', text:
+`Kabelové rozvody jsou v provedení Cu, jsou rozvedeny pod omítkou nebo v elektroinstalačních lištách, trubkách a kabelových žlabech.
+Vývody jsou ukončeny zásuvkou nebo osvětlením. Rozvody jsou jištěny jističi nebo jističochrániči.
+Podrobnější popis jištění, kabelů a ostatních el. prvků je uvedeno v další části revize.` },
+    { id: uid(), type: 'text', on: false, title: 'Zdravotnické prostory – ČSN 33 2000-7-710', text:
+`710.61 Výchozí revize musí být provedena v souladu s místními/národními předpisy. Zkoušky uvedené pod body a) až g) doplňují požadavky HD 60364-6; musí být provedeny před uvedením zařízení do provozu a po změnách zařízení, či opravách a před opětovným uvedením do provozu:
+a) kontrola funkce systémů sledujících stav izolace a přetížení zdravotnických sítí IT včetně akustických a optických výstražných systémů - neobsahuje
+b) ověření měřením doplňujícího pospojování, zda je v souladu s požadavky 710.415.2.1 a 710.415.2.2 - vyhovuje
+c) ověření kompletnosti doplňujícího pospojování, zda splňuje požadavky 710.415.2 - vyhovuje
+d) ověření, zda bezpečnostní napájení splňuje požadavky 710.56 - neobsahuje
+e) měření unikajících proudů výstupního obvodu a krytu nezatíženého ochranného oddělovacího transformátoru pro zdravotnické sítě IT - neobsahuje
+f) matematické ověření, zda je dodržena selektivita bezpečnostního napájení s ohledem na dokumenty plánování a výpočtů - neobsahuje
+g) matematické ověření použitých ochranných opatření pro zajištění - vyhovuje` },
+    { id: uid(), type: 'boards', on: true, title: '', text: '' },
+    { id: uid(), type: 'measure', on: true, title: 'Měření', text:
+`Bylo provedeno měření izolačních stavů, vybavovacích proudů a vypínacích časů.
+Dále měření impedance vypínacích smyček. Naměřené hodnoty odpovídají ČSN 33 2000-6 ed.2 a dalším přidruženým normám. Funkce zkušebního tlačítka byla ověřena.
+
+Naměřené hodnoty impedance vypínacích smyček byly zkontrolovány dle vzorce {VZOREC}
+ZS – zapsané hodnoty jsou uvedeny jako nejvyšší naměřené
+Riso – zapsané hodnoty jsou uvedeny jako nejnižší naměřené` },
+    { id: uid(), type: 'text', on: true, title: 'Závady', text: 'Bez závad.' },
+    { id: uid(), type: 'text', on: true, title: 'Závěr', text:
+`Revize byla provedena prohlídkou, měřením a přezkoušením.
+Revize byla provedena v souladu s požadavky následujících technických předpisů a norem:
+ČSN 33 2000-6 ed.2 (3/2016), ČSN 33 2000-4-41 ed.3 (2/2018), ČSN 33 2000-4-43 ed.2 (1/2011), ČSN 33 2000-5-54 ed.3 (4/2012), ČSN 33 1500/Z3 (6/1990,4/2004), ČSN 332000-5-52 ed.2 (2/2012), ČSN 33 2130 ed.4 (12/2024), ČSN 33 2000-5-51 ed.3+Z1+Z2 (8/2022), NV 190/2022Sb.
+
+Rozváděče nejsou předmětem revize, dle zákona č. 90/2016 Sb. se jedná o výrobek.
+
+Elektroinstalaci realizoval: …
+
+{ZKOUSKY}
+
+Zhodnocení stavu:
+Stav elektroinstalace se od poslední revize nezměnil. Elektrické zařízení je v dobrém a funkčním stavu.
+
+Při revizi nebylo zjištěno závad, které by ohrožovaly život, zdraví nebo majetek.
+
+Podpisem této revizní zprávy bere provozovatel prokazatelně na vědomí zjištěné skutečnosti v revizi uvedené.
+
+V souladu s NV 190/2022 Sb., ČSN 33 1500 (Z3/2004), příloha 2, písmeno b), ČSN 33 2000-6 ed.2, čl. 6.5.2 byl po dohodě s provozovatelem stanoven termín příští pravidelné revize {LET}.
+Dále po každé opravě vyvolané poruchou či poškozením el. zařízení.
+
+Výsledky této revize se vztahují pouze na posuzovaný předmět revize.
+
+Po provedené prohlídce a zkoušení (včetně měření) posuzovaného elektrického zařízení a instalace podávám následující:
+*Celkový posudek
+
+# ELEKTRICKÉ ZAŘÍZENÍ JE Z HLEDISKA BEZPEČNOSTI
+# {POSUDEK}` }
+  ];
+}
+
+function newRow(o = {}) {
+  return Object.assign({ id: uid(), kind: 'c', oz: '', slovo: 'jištění', pristroj: '', kabel: '', popis: '', f3: false, rcd: false, lock: false,
+    m: { state: 'm', zs: '', zs1: '', zs2: '', zs3: '', u: '', riso: '', risoU: '', poz: '', sled: false, u12: '', u13: '', u23: '', idn: '', half: true,
+      ac: { on: true, i: '', t: '', uc: '', t5: '' }, ap: { on: true, i: '', t: '', uc: '', t5: '' }, am: { on: true, i: '', t: '', uc: '', t5: '' } } }, o);
+}
+function newHeading(text) { return { id: uid(), kind: 'h', text: text || '1. řada: vrchní' }; }
+function newBoard(o = {}) {
+  return Object.assign({ id: uid(), name: 'Rozváděč R', popis: '', privod: '', mereno: 'měřeno v rozváděči a na konci jednotlivých okruhů', u: '',
+    pm: { on: false, zs1: '', zs2: '', zs3: '', u: '', riso: '', sled: true, u12: '', u13: '', u23: '' }, rows: [] }, o);
+}
+
+function defaultProject(prev) {
+  const n = new Date(), today = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
+  return {
+    v: 1,
+    meta: { typ: 'pravidelné', cislo: '', misto: '', provozovatel: '',
+      predmet: 'je revize …\nRevize byla provedena od rozvodnice až po zásuvky a světla.\nNetýká se – ostatních rozvodů a spotřebičů v objektu.',
+      dokumentace: 'Pro sepsání této revizní zprávy byla předložena dokumentace (viz bod 2).',
+      soustavy: 'Soustava:  3PEN 400/230V, 50 Hz  / TN-C      - přívodní vedení\nSoustava:  3x 400/230V, 50 Hz  / TN-C-S        - vnitřní rozvody',
+      normy: 'NV 190/2022Sb., ČSN 331500 Z1 až Z4, ČSN 33 2000-6 ed.2',
+      vyhovuji: true, zavady: false, schopny: true, let: 5,
+      zahajeni: today, ukonceni: today, vypracovani: today, predani: today,
+      rozdelovnik: '1x RT        2x provozovatel', priloha: '----' },
+    technik: prev ? clone(prev.technik) : clone(PROFILY[0]),
+    settings: prev ? clone(prev.settings) : { zsCoef: '0.67', uo: '230', defU: '237', defRiso: '>200', defRisoU: '525', poradi: 'end', odrazky: true },
+    sections: prev ? clone(prev.sections) : defaultSections(),
+    zkousky: prev ? clone(prev.zkousky) : ZKOUSKY.map((t, i) => ({ t, v: ZK_VAL[i] })),
+    boards: []
+  };
+}
+
+function sampleProject() {
+  const P = defaultProject();
+  Object.assign(P.meta, { cislo: '02/26', misto: 'Nebytový prostor, Olšanské nám. 1784/6, 130 00 Praha 3-Vinohrady',
+    provozovatel: 'SVJ, Schwarzové 1421/2, 163 00 Praha 17 – Řepy, IČO: 09401865.',
+    predmet: 'je revize nebytového prostoru bytového domu č.p. 1784/6.\nRevize byla provedena od rozvodnice až po zásuvky a světla.\nNetýká se – ostatních rozvodů a spotřebičů v objektu.', let: 4 });
+  const re = newBoard({ name: 'Rozváděč RE80U', popis: 'oceloplechová rozvodnice umístěna na chodbě bytového domu vlevo za dřevěnými dveřmi, ELEKTRIK, typ: RE80U, v.č. 16594, r.v. 2008, IP: 40/20' });
+  re.rows.push(newRow({ oz: 'Textil', pristroj: 'LEGRAND B25/1', kabel: 'CYKY 4B x 10mm2', popis: 'odvod do rozváděče RB.NP2', m: Object.assign(newRow().m, { state: 'x' }) }));
+  const rb = newBoard({ name: 'Rozváděč RB.NP2', popis: 'nástěnná plastová rozvodnice umístěna na chodbě nebytového prostoru, typ: L-80P-2A18-25-00 00 05 01, v.č. 01/2026, r.v. 2026', privod: 'z RE80U, kabel CYKY 4B x 10mm2' });
+  rb.rows.push(newHeading('1. řada: vrchní'));
+  rb.rows.push(newRow({ oz: 'QM', slovo: 'hlavní jistič – typ', pristroj: 'SCHRACK BZ900243 40/3', kabel: 'CYKY 4B x 10mm2', f3: true }));
+  rb.rows.push(newHeading('2. řada: zleva'));
+  const vals = [['18', '7,7', '5,2', '19,5', '7,6', '22,5', '7,7', '0,88'], ['21', '17,3', '5,5', '25,5', '8,4', '25,5', '8,4', '0,69'], ['25,5', '7,8', '5,4', '25,5', '8,4', '27', '8,1', '0,78']];
+  vals.forEach((v, i) => {
+    const r = newRow({ oz: 'FAI' + (i + 1), pristroj: 'SCHRACK BO668616 B16/1N/003-A', kabel: 'CYKY-J 3x2,5mm2', popis: 'zásuvky', rcd: true });
+    Object.assign(r.m, { zs: v[7], u: '236', riso: '>200' });
+    r.m.ac = { on: true, i: v[0], t: v[1], uc: '0', t5: v[2] }; r.m.ap = { on: true, i: v[3], t: v[4], uc: '0', t5: v[2] }; r.m.am = { on: true, i: v[5], t: v[6], uc: '0', t5: v[2] };
+    rb.rows.push(r);
+  });
+  rb.rows[1].m.zs1 = '0,16'; rb.rows[1].m.zs2 = '0,16'; rb.rows[1].m.zs3 = '0,17';
+  P.boards.push(re, rb);
+  return P;
+}
+
+// ---------- pomocné texty ----------
+function fmtDate(iso) { if (!iso) return ''; const [y, m, d] = iso.split('-'); return `${d}.${m}.${y}`; }
+function nextYear(P) { const d = P.meta.ukonceni || P.meta.vypracovani; const y = d ? +d.slice(0, 4) : new Date().getFullYear(); return y + (+P.meta.let || 0); }
+function letWord(n) { n = +n; return n === 1 ? '1 rok' : (n >= 2 && n <= 4 ? n + ' roky' : n + ' let'); }
+function poLetech(n) { n = +n; return n === 1 ? 'po 1 roce' : `po ${n} letech`; }
+function vzorec(S) { return (num(S.zsCoef) || 1) === 1 ? 'ZS x Ia ≤ Uo' : `ZS= ${cz(S.zsCoef)}xUo/Ia`; }
+
+// ---------- odstavce (společný model pro Word, náhled i schránku) ----------
+// p = { runs:[{t,b,i,size,field}], align, tabs:[[pos,type]], before, after, pb, ind:{left,hanging}, keep }
+const P_ = (runs, o = {}) => Object.assign({ runs: typeof runs === 'string' ? [{ t: runs }] : runs }, o);
+const EMPTY = () => P_('');
+const MTAB = [[1134, 'left']];
+
+function textBlock(text, P) {
+  const S = P.settings, out = [];
+  const zk = P.zkousky.map(z => `${S.odrazky ? '•\t' : ''}${z.t} – ${z.v}`);
+  String(text || '').replace(/\{VZOREC\}/g, vzorec(S)).replace(/\{LET\}/g, 'za ' + letWord(P.meta.let))
+    .replace(/\{POSUDEK\}/g, P.meta.schopny ? 'SCHOPNÉ PROVOZU' : 'NESCHOPNÉ PROVOZU')
+    .split('\n').forEach(line => {
+      if (line.trim() === '{ZKOUSKY}') { zk.forEach(z => out.push(P_(z, S.odrazky ? { tabs: [[360, 'left']], ind: { left: 360, hanging: 360 } } : {}))); return; }
+      if (line.startsWith('# ')) out.push(P_([{ t: line.slice(2), b: true, size: 13 }], { align: 'center' }));
+      else out.push(P_(line));
+    });
+  return out;
+}
+
+function circuitLine(r, S) {
+  const parts = [];
+  const dev = [r.slovo, r.pristroj].filter(has).join(' – ');
+  if (S.poradi === 'afterId' && has(r.popis)) {
+    let s = `${r.oz}- ${r.popis}`; if (dev) s += ' – ' + dev; if (has(r.kabel)) s += ', kabel ' + r.kabel; return s;
+  }
+  parts.push(r.oz); if (dev) parts.push(dev);
+  let s = parts.filter(has).join(' – ');
+  if (has(r.kabel)) s += ', kabel ' + r.kabel;
+  if (has(r.popis)) s += ', ' + r.popis;
+  return s;
+}
+
+function boardParas(b, P) {
+  const out = [];
+  out.push(P_([{ t: b.name + ':', b: true }, { t: has(b.popis) ? ' ' + b.popis : '' }], { keep: true }));
+  out.push(EMPTY());
+  if (has(b.privod)) { out.push(P_('Přívod – ' + b.privod)); out.push(EMPTY()); }
+  b.rows.forEach((r, i) => {
+    if (r.kind === 'h') { if (i > 0) out.push(EMPTY()); out.push(P_(r.text)); }
+    else out.push(P_(circuitLine(r, P.settings)));
+  });
+  out.push(EMPTY());
+  return out;
+}
+
+function measureParas(b, P) {
+  const S = P.settings, out = [];
+  if (!(b.pm && b.pm.on) && !b.rows.some(r => r.kind === 'c' && r.m.state !== 'x')) return out;
+  const U0 = has(b.u) ? b.u : S.defU;
+  out.push(P_([{ t: b.name + ':', b: true }, { t: has(b.mereno) ? ' – ' + b.mereno : '' }], { keep: true }));
+  out.push(EMPTY());
+  if (has(b.privod)) out.push(P_('Přívod – ' + b.privod));
+  const risoStr = (r, ru) => has(r) ? `Riso= ${cz(r)}MΩ/${cz(has(ru) ? ru : S.defRisoU)}V` : 'Riso – neměř.';
+  const zs3 = (m, U) => [1, 2, 3].map(i => `L${i}- ${cz(m['zs' + i])}Ω / ${cz(U)}V`).join('; ');
+  const sled = m => `Sled fází 1.2.3 – v pořádku – 1.2 - ${cz(m.u12)}V; 1.3 – ${cz(m.u13)}V; 2.3 – ${cz(m.u23)}V`;
+  if (b.pm && b.pm.on) {
+    const pm = b.pm, U = has(pm.u) ? pm.u : U0;
+    out.push(P_(`Přívod\tZs = ${zs3(pm, U)}` + (has(pm.riso) ? '; ' + risoStr(pm.riso) : ''), { tabs: MTAB }));
+    if (pm.sled) out.push(P_('\t' + sled(pm), { tabs: MTAB }));
+  }
+  out.push(EMPTY());
+  let lastWasHeading = false;
+  b.rows.forEach((r, idx) => {
+    if (r.kind === 'h') {
+      const anyLater = b.rows.slice(idx + 1).findIndex(x => x.kind === 'h');
+      const seg = b.rows.slice(idx + 1, anyLater < 0 ? undefined : idx + 1 + anyLater);
+      if (!seg.some(x => x.kind === 'c' && x.m.state !== 'x')) return;
+      if (out.length && !lastWasHeading && out[out.length - 1].runs[0].t !== '') out.push(EMPTY());
+      out.push(P_(r.text)); lastWasHeading = true; return;
+    }
+    const m = r.m; if (m.state === 'x') return;
+    lastWasHeading = false;
+    const o = { tabs: MTAB };
+    if (m.state === 'n') { out.push(P_(`${r.oz}\tZs = neměř.`, o)); return; }
+    const U = has(m.u) ? m.u : U0;
+    const zsTxt = r.f3 ? ([1, 2, 3].some(i => has(m['zs' + i])) ? zs3(m, U) : 'neměř.') : (has(m.zs) ? `${r.rcd ? '' : 'L- '}${cz(m.zs)}Ω / ${cz(U)}V` : 'neměř.');
+    if (r.rcd) {
+      const tests = [['ac', 'AC'], ['ap', 'A+'], ['am', 'A-']].filter(([k]) => m[k] && m[k].on);
+      const lines = tests.map(([k, lb]) => { const t = m[k]; return `(${lb}) I∆ = ${cz(t.i)}mA, t = ${cz(t.t)}ms, Uc= ${cz(has(t.uc) ? t.uc : '0')}V, 5x přetížení – ${cz(t.t5)}ms`; });
+      if (!lines.length) lines.push('');
+      const ri = risoStr(m.riso, m.risoU), zs = 'Zs = ' + zsTxt;
+      if (lines.length === 1) lines[0] += `, ${cz(U)}V; ${ri}; ${zs}`;
+      else { lines[0] += `, ${cz(U)}V`; lines[1] += `, ${cz(U)}V; ${ri}`; lines[lines.length - 1] += `; ${zs}`; }
+      if (has(m.poz)) lines[lines.length - 1] += ' – ' + m.poz;
+      lines.forEach((l, i) => out.push(P_((i === 0 ? r.oz : '') + '\t' + l, o)));
+      if (m.half) out.push(P_('\t½x přetížení > 300ms, funkční zkouška test tlačítka – v pořádku', o));
+      if (r.f3 && m.sled) out.push(P_('\t' + sled(m), o));
+      out.push(EMPTY());
+      return;
+    }
+    out.push(P_(`${r.oz}\tZs = ${zsTxt}; ${risoStr(m.riso, m.risoU)}` + (has(m.poz) ? ' – ' + m.poz : ''), o));
+    if (r.f3 && m.sled) out.push(P_('\t' + sled(m), o));
+  });
+  out.push(EMPTY());
+  return out;
+}
+
+function sectionTitle(title, S) {
+  return P_([{ t: (S.odrazky ? '•\t' : '') + title + ':', b: true }], { tabs: [[360, 'left']], keep: true, before: 6 });
+}
+
+function bodyParas(P) {
+  const out = [], S = P.settings;
+  P.sections.filter(s => s.on).forEach(s => {
+    if (s.type === 'boards') { P.boards.forEach(b => out.push(...boardParas(b, P))); return; }
+    if (has(s.title)) { out.push(sectionTitle(s.title, S)); out.push(EMPTY()); }
+    out.push(...textBlock(s.text, P));
+    out.push(EMPTY());
+    if (s.type === 'measure') P.boards.forEach(b => out.push(...measureParas(b, P)));
+  });
+  return out;
+}
+
+function coverParas(P) {
+  const M = P.meta, T = P.technik, out = [];
+  const L = 3119, R = 9638;
+  const multi = (label, text, extra = {}) => String(text || '').split('\n').forEach((line, i) =>
+    out.push(P_([{ t: i === 0 ? label : '', b: i === 0 && !!label }, { t: '\t' + line }], Object.assign({ tabs: [[L, 'left']] }, extra))));
+  out.push(P_([{ t: `Zpráva o ${M.typ} revizi elektrického zařízení`, b: true, size: 16 }], { align: 'center', after: 6 }));
+  out.push(P_([{ t: 'Revize provedena v souladu s ' + M.normy, size: 10 }], { align: 'center', after: 10 }));
+  out.push(P_([{ t: 'Revizní technik:', b: true }, { t: '\t' + T.jmeno + '\t' }, { t: 'Revizní zpráva č.: ', b: true }, { t: M.cislo }], { tabs: [[L, 'left'], [R, 'right']] }));
+  out.push(P_([{ t: 'Adresa:' }, { t: '\t' + T.adresa + '\t' + (has(T.email) ? 'e-mail: ' + T.email : '') }], { tabs: [[L, 'left'], [R, 'right']] }));
+  String(T.evc || '').split('\n').forEach(l => out.push(P_(l)));
+  out.push(EMPTY());
+  multi('Místo revize:', M.misto);
+  multi('Provozovatel:', M.provozovatel);
+  out.push(EMPTY());
+  multi('Předmět revize:', M.predmet);
+  out.push(EMPTY());
+  multi('Dokumentace:', M.dokumentace);
+  out.push(EMPTY());
+  out.push(P_([{ t: 'Jmenovitá napětí:', b: true }]));
+  multi('', M.soustavy);
+  out.push(EMPTY());
+  out.push(P_([{ t: 'Celkový posudek:', b: true }]));
+  out.push(P_(`\tnaměřené hodnoty vyhovují ČSN\t${M.vyhovuji ? 'ano' : 'ne'}`, { tabs: [[360, 'left'], [R, 'right']] }));
+  out.push(P_(`\tna elektrickém zařízení shledány závady\t${M.zavady ? 'ano' : 'ne'}`, { tabs: [[360, 'left'], [R, 'right']] }));
+  out.push(EMPTY());
+  multi('Použité měřící přístroje:', T.pristroje);
+  out.push(EMPTY());
+  out.push(P_([{ t: 'PEVNÝ ELEKTRICKÝ ROZVOD V ROZSAHU DÁLE UVEDENÉM JE', b: true, size: 13 }], { align: 'center', before: 6 }));
+  out.push(P_([{ t: 'Z HLEDISKA BEZPEČNOSTI ' + (M.schopny ? 'SCHOPNÝ PROVOZU' : 'NESCHOPNÝ PROVOZU'), b: true, size: 13 }], { align: 'center', after: 10 }));
+  out.push(P_([{ t: 'Stanovení termínu další revize:', b: true }, { t: `\t${poLetech(M.let)} tj. v roce ${nextYear(P)}` }], { tabs: [[L, 'left']] }));
+  out.push(P_([{ t: 'Tato revize má:\t' }, { field: 'NUMPAGES' }, { t: ' stran' }], { tabs: [[L, 'left']] }));
+  out.push(P_('Rozdělovník revizí:\t' + M.rozdelovnik, { tabs: [[L, 'left']] }));
+  out.push(P_('Přílohou je:\t' + M.priloha, { tabs: [[L, 'left']] }));
+  const dt = [[L, 'left'], [5953, 'left'], [8220, 'left']];
+  out.push(P_(`Datum zahájení:\t${fmtDate(M.zahajeni)}\tDatum ukončení:\t${fmtDate(M.ukonceni)}`, { tabs: dt }));
+  out.push(P_(`Datum vypracování:\t${fmtDate(M.vypracovani)}\tDatum předání:\t${fmtDate(M.predani)}`, { tabs: dt }));
+  for (let i = 0; i < 5; i++) out.push(EMPTY());
+  out.push(P_('……………………………………\t……………………………………', { tabs: [[R, 'right']] }));
+  out.push(P_('podpis provozovatele\tpodpis revizního technika', { tabs: [[R, 'right']] }));
+  out.push(P_([{ t: 'Popis:', b: true, size: 12 }], { pb: true, after: 6 }));
+  return out;
+}
+
+const allParas = P => [...coverParas(P), ...bodyParas(P)];
+const footerParas = P => [P_([{ t: 'Stránka ' }, { field: 'PAGE' }], { align: 'center' }), P_([{ t: P.technik.paticka || '', size: 9 }], { align: 'center' })];
+
+// ---------- HTML (náhled + schránka) ----------
+const hEsc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+function parasToHtml(ps, forWord) {
+  return ps.map(p => {
+    const st = [`text-align:${p.align || 'left'}`];
+    if (p.before) st.push(`margin-top:${p.before}pt`); if (p.after) st.push(`margin-bottom:${p.after}pt`);
+    if (forWord) st.push('margin:0', 'font-family:"Times New Roman"', 'font-size:11pt');
+    if (p.pb) st.push(forWord ? 'page-break-before:always' : 'margin-top:28pt;border-top:1px dashed #999;padding-top:16pt');
+    const inner = p.runs.map(r => {
+      let t = r.field ? (r.field === 'PAGE' ? '1' : 'N') : hEsc(r.t || '');
+      if (forWord) t = t.replace(/\t/g, '<span style="mso-tab-count:1">\t</span>');
+      const rs = []; if (r.b) rs.push('font-weight:bold'); if (r.i) rs.push('font-style:italic'); if (r.size) rs.push(`font-size:${r.size}pt`);
+      return rs.length ? `<span style="${rs.join(';')}">${t}</span>` : t;
+    }).join('');
+    return `<p style="${st.join(';')}">${inner || (forWord ? '&nbsp;' : '')}</p>`;
+  }).join('\n');
+}
+const parasToText = ps => ps.map(p => p.runs.map(r => r.field ? '' : r.t).join('')).join('\n');
+
+// ---------- DOCX ----------
+const xEsc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+function rPr(r) { let s = ''; if (r.b) s += '<w:b/><w:bCs/>'; if (r.i) s += '<w:i/><w:iCs/>'; if (r.size) s += `<w:sz w:val="${r.size * 2}"/><w:szCs w:val="${r.size * 2}"/>`; return s ? `<w:rPr>${s}</w:rPr>` : ''; }
+function runXml(r) {
+  const rp = rPr(r);
+  if (r.field) return `<w:r>${rp}<w:fldChar w:fldCharType="begin"/></w:r><w:r>${rp}<w:instrText xml:space="preserve"> ${r.field} </w:instrText></w:r><w:r>${rp}<w:fldChar w:fldCharType="separate"/></w:r><w:r>${rp}<w:t>1</w:t></w:r><w:r>${rp}<w:fldChar w:fldCharType="end"/></w:r>`;
+  return String(r.t || '').split(/(\t|\n)/).map(x => x === '\t' ? `<w:r>${rp}<w:tab/></w:r>` : x === '\n' ? `<w:r>${rp}<w:br/></w:r>` : x ? `<w:r>${rp}<w:t xml:space="preserve">${xEsc(x)}</w:t></w:r>` : '').join('');
+}
+function parXml(p) {
+  let pp = '';
+  if (p.keep) pp += '<w:keepNext/>';
+  if (p.pb) pp += '<w:pageBreakBefore/>';
+  if (p.tabs && p.tabs.length) pp += '<w:tabs>' + p.tabs.map(([pos, t]) => `<w:tab w:val="${t}" w:pos="${pos}"/>`).join('') + '</w:tabs>';
+  pp += `<w:spacing w:before="${(p.before || 0) * 20}" w:after="${(p.after || 0) * 20}"/>`;
+  if (p.ind) pp += `<w:ind w:left="${p.ind.left || 0}"${p.ind.hanging ? ` w:hanging="${p.ind.hanging}"` : ''}/>`;
+  if (p.align && p.align !== 'left') pp += `<w:jc w:val="${p.align === 'justify' ? 'both' : p.align}"/>`;
+  return `<w:p><w:pPr>${pp}</w:pPr>${p.runs.map(runXml).join('')}</w:p>`;
+}
+const W_NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+function docxFiles(P) {
+  const body = allParas(P).map(parXml).join('');
+  const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ${W_NS}><w:body>${body}<w:sectPr><w:footerReference w:type="default" r:id="rId2"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+  const footer = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr ${W_NS}>${footerParas(P).map(parXml).join('')}</w:ftr>`;
+  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles ${W_NS}><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:eastAsia="Times New Roman" w:cs="Times New Roman"/><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="cs-CZ"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style></w:styles>`;
+  const settings = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:settings ${W_NS}><w:updateFields w:val="true"/><w:defaultTabStop w:val="709"/></w:settings>`;
+  return [
+    ['[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/></Types>`],
+    ['_rels/.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`],
+    ['word/_rels/document.xml.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/></Relationships>`],
+    ['word/document.xml', doc], ['word/styles.xml', styles], ['word/settings.xml', settings], ['word/footer1.xml', footer]
+  ];
+}
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function zipStore(files) {
+  const enc = new TextEncoder(), parts = [], central = []; let off = 0;
+  for (const [name, text] of files) {
+    const nb = enc.encode(name), d = enc.encode(text), crc = crc32(d);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(12, 0x21, true);
+    lh.setUint32(14, crc, true); lh.setUint32(18, d.length, true); lh.setUint32(22, d.length, true); lh.setUint16(26, nb.length, true);
+    parts.push(new Uint8Array(lh.buffer), nb, d);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(14, 0x21, true);
+    ch.setUint32(16, crc, true); ch.setUint32(20, d.length, true); ch.setUint32(24, d.length, true); ch.setUint16(28, nb.length, true); ch.setUint32(42, off, true);
+    central.push(new Uint8Array(ch.buffer), nb);
+    off += 30 + nb.length + d.length;
+  }
+  const cd = central.reduce((a, b) => a + b.length, 0), end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, cd, true); end.setUint32(16, off, true);
+  return [...parts, ...central, new Uint8Array(end.buffer)];
+}
+if (typeof module !== 'undefined') module.exports = { parseDevice, checkRow, sampleProject, defaultProject, allParas, parasToText, docxFiles, zipStore, newRow, newBoard, newHeading };
+</script>
+
+<!-- ============ UI ============ -->
+<script>
+const LS_P = 'revize.project.v1', LS_PROF = 'revize.profiles.v1', LS_LIB = 'revize.lib.v1', LS_TAB = 'revize.tab';
+const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+             set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+let P = ls.get(LS_P, null) || sampleProject();
+let tab = ls.get(LS_TAB, 'hlavicka');
+let cur = 0, bulkOpen = false;
+const app = document.getElementById('app');
+const TABS = [['hlavicka', 'Hlavička'], ['texty', 'Texty zprávy'], ['rozvadece', 'Rozvaděče'], ['mereni', 'Měření'], ['nahled', 'Náhled a export']];
+
+// ---- ikony ----
+const SVG = {
+  plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  copy: '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  up: '<polyline points="18 15 12 9 6 15"/>', down: '<polyline points="6 9 12 15 18 9"/>',
+  trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  board: '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>',
+  check: '<polyline points="20 6 9 17 4 12"/>',
+  alert: '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  clip: '<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  list: '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
+  heading: '<path d="M4 6h16M4 12h10M4 18h6"/>',
+  prev: '<polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/>',
+  user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  auto: '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>'
+};
+const ic = n => `<svg class="ic" viewBox="0 0 24 24">${SVG[n]}</svg>`;
+
+let saveT, toastT;
+function save() { const s = document.getElementById('saved'); s.style.opacity = .4; clearTimeout(saveT); saveT = setTimeout(() => { ls.set(LS_P, P); s.style.opacity = 1; }, 300); }
+function toast(t) { const el = document.getElementById('toast'); el.innerHTML = ic('check') + hEsc(t); el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2200); }
+const status = toast;
+function updSub() { document.getElementById('sub').textContent = [P.meta.cislo && 'Zpráva č. ' + P.meta.cislo, P.meta.misto].filter(Boolean).join(' · ') || 'Nová zpráva'; }
+
+// ---- path binding ----
+function getPath(path) { return path.split('.').reduce((o, k) => o == null ? o : o[k], P); }
+function setPath(path, v) { const ks = path.split('.'); const last = ks.pop(); const o = ks.reduce((o, k) => o[k], P); o[last] = v; }
+const ea = s => hEsc(s ?? '').replace(/"/g, '&quot;');
+const inp = (path, ph = '', cls = '', extra = '') => `<input type="text" class="${cls}" data-bind="${path}" value="${ea(getPath(path))}" placeholder="${ea(ph)}" ${extra}>`;
+const fld = (path, label, o = {}) => `<label class="f ${o.wide ? 'wide' : ''}">${label}${o.ta ? `<textarea data-bind="${path}" rows="${o.rows || 3}">${hEsc(getPath(path) ?? '')}</textarea>` : o.type ? `<input type="${o.type}" data-bind="${path}" value="${ea(getPath(path))}">` : inp(path, o.ph || '', '', o.list ? `list="${o.list}"` : '')}</label>`;
+const sw = (path, label) => `<label class="sw"><input type="checkbox" data-bind="${path}" ${getPath(path) ? 'checked' : ''}><span class="tr"></span>${label}</label>`;
+const chip = (path, label, title = '') => `<label class="chip" title="${ea(title)}"><input type="checkbox" data-bind="${path}" ${getPath(path) ? 'checked' : ''}>${label}</label>`;
+const sel = (path, opts) => `<select data-bind="${path}">${opts.map(o => { const [v, l] = Array.isArray(o) ? o : [o, o]; return `<option value="${ea(v)}" ${String(getPath(path)) === String(v) ? 'selected' : ''}>${hEsc(l)}</option>`; }).join('')}</select>`;
+const ig = (path, label, unit, ph = '', cls = '', col = '') => `<label class="ig">${label ? `<span>${label}</span>` : ''}${inp(path, ph, cls, col ? `data-col="${col}"` : '')}${unit ? `<em>${unit}</em>` : ''}</label>`;
+const fs = (title, desc, body) => `<section class="fs"><div class="fs-h"><h3>${title}</h3>${desc ? `<p>${desc}</p>` : ''}</div><div>${body}</div></section>`;
+const pageHead = (title, desc, right = '') => `<div class="ph"><div style="flex:1;min-width:240px"><h2>${title}</h2><p>${desc}</p></div>${right}</div>`;
+
+// ---- knihovna našeptávání ----
+function updateLib() {
+  const lib = ls.get(LS_LIB, { pristroj: [], kabel: [] });
+  P.boards.forEach(b => b.rows.forEach(r => { if (r.kind !== 'c') return;
+    ['pristroj', 'kabel'].forEach(k => { const v = (r[k] || '').trim(); if (v && !lib[k].includes(v)) lib[k].unshift(v); }); }));
+  lib.pristroj = lib.pristroj.slice(0, 300); lib.kabel = lib.kabel.slice(0, 150);
+  ls.set(LS_LIB, lib);
+  const defs = { kabel: ['CYKY-J 3x1,5mm2', 'CYKY-J 3x2,5mm2', 'CYKY-J 5x1,5mm2', 'CYKY-J 5x2,5mm2', 'CYKY-J 5x4mm2', 'CYKY-J 5x6mm2', 'CYKY-J 4x10mm2', 'CYKY-O 3x1,5mm2'] };
+  document.getElementById('dls').innerHTML = ['pristroj', 'kabel'].map(k =>
+    `<datalist id="dl-${k}">${[...new Set([...lib[k], ...(defs[k] || [])])].map(v => `<option value="${ea(v)}">`).join('')}</datalist>`).join('');
+}
+
+const boardWarns = b => b.rows.reduce((n, r) => n + (checkRow(r, b, P.settings).length ? 1 : 0), 0);
+const allWarns = () => P.boards.reduce((n, b) => n + boardWarns(b), 0);
+
+// ---- render ----
+function renderTabs() {
+  const w = allWarns();
+  const extra = { rozvadece: `<span class="cnt">${P.boards.length}</span>`, mereni: w ? `<span class="cnt bad">${w}</span>` : '' };
+  document.getElementById('tabs').innerHTML = TABS.map(([k, l], i) => `<button class="${tab === k ? 'on' : ''}" data-tab="${k}"><span class="n">${i + 1}</span>${l}${extra[k] || ''}</button>`).join('');
+}
+function render() {
+  if (cur >= P.boards.length) cur = Math.max(0, P.boards.length - 1);
+  renderTabs(); updSub();
+  app.innerHTML = { hlavicka: vHlavicka, texty: vTexty, rozvadece: vRozvadece, mereni: vMereni, nahled: vNahled }[tab]();
+  if (tab === 'mereni') refreshBadges();
+}
+
+function vHlavicka() {
+  const profs = ls.get(LS_PROF, null) || PROFILY;
+  return pageHead('Hlavička zprávy', 'Údaje na titulní straně, revizní technik a nastavení výpočtů.') + `
+  <div class="card">
+    ${fs('Zpráva', 'Základní identifikace revize.', `<div class="grid">
+      <label class="f">Typ revize${sel('meta.typ', [['výchozí', 'výchozí'], ['pravidelné', 'pravidelná'], ['mimořádné', 'mimořádná']])}</label>
+      ${fld('meta.cislo', 'Číslo zprávy', { ph: '02/26' })}
+      ${fld('meta.misto', 'Místo revize', { wide: true, ph: 'Ulice č.p., PSČ Obec' })}
+      ${fld('meta.provozovatel', 'Provozovatel', { wide: true })}
+    </div>`)}
+    ${fs('Rozsah a dokumentace', 'Krátké texty na titulní stranu. Podrobný popis je na kartě 2.', `<div class="grid">
+      ${fld('meta.predmet', 'Předmět revize', { ta: 1, wide: true })}
+      ${fld('meta.dokumentace', 'Dokumentace', { ta: 1, rows: 2, wide: true })}
+      ${fld('meta.soustavy', 'Jmenovitá napětí / soustavy', { ta: 1, rows: 2, wide: true })}
+      ${fld('meta.normy', 'Revize provedena v souladu s', { wide: true })}
+    </div>`)}
+    ${fs('Termíny', 'Rok další revize se dopočítá z data ukončení.', `<div class="grid">
+      ${fld('meta.zahajeni', 'Datum zahájení', { type: 'date' })}${fld('meta.ukonceni', 'Datum ukončení', { type: 'date' })}
+      ${fld('meta.vypracovani', 'Datum vypracování', { type: 'date' })}${fld('meta.predani', 'Datum předání', { type: 'date' })}
+      <label class="f">Další revize za (let)<input type="number" min="1" max="10" data-bind="meta.let" value="${ea(P.meta.let)}"></label>
+      <label class="f">Příští revize<span class="calc" id="nextY">v roce ${nextYear(P)}</span></label>
+      ${fld('meta.rozdelovnik', 'Rozdělovník')}${fld('meta.priloha', 'Přílohou je')}
+    </div>`)}
+    ${fs('Celkový posudek', 'Promítne se na titulní stranu i do závěru.', `<div class="swl">
+      ${sw('meta.vyhovuji', 'Naměřené hodnoty vyhovují ČSN')}${sw('meta.zavady', 'Na zařízení shledány závady')}${sw('meta.schopny', 'Zařízení je schopné provozu')}</div>`)}
+  </div>
+
+  <div class="card">
+    ${fs('Revizní technik', 'Uložené profily načtete jedním kliknutím.', `
+      <div class="actions" style="margin-bottom:14px">
+        ${profs.map((p, i) => `<button class="btn sm" data-act="loadProf" data-i="${i}">${ic('user')}${hEsc(p.jmeno)}</button>`).join('')}
+        <button class="btn ghost sm" data-act="saveProf">${ic('plus')}Uložit jako profil</button>
+      </div>
+      <div class="grid">
+        ${fld('technik.jmeno', 'Jméno')}${fld('technik.email', 'E-mail')}
+        ${fld('technik.adresa', 'Adresa', { wide: true })}
+        ${fld('technik.evc', 'Evidenční čísla / oprávnění', { ta: 1, rows: 2, wide: true })}
+        ${fld('technik.pristroje', 'Měřicí přístroje (každý na řádek)', { ta: 1, rows: 2, wide: true })}
+        ${fld('technik.paticka', 'Patička stránky', { wide: true })}
+      </div>`)}
+  </div>
+
+  <div class="card">
+    ${fs('Výpočty a formát', 'Kontrola naměřených hodnot a vzhled výstupu.', `<div class="grid">
+      <label class="f">Kontrola Zs${sel('settings.zsCoef', [['0.67', 'Zs ≤ 0,67 × Uo / Ia'], ['1', 'Zs × Ia ≤ Uo']])}</label>
+      ${fld('settings.uo', 'Uo [V]')}
+      ${fld('settings.defU', 'Výchozí napětí U [V]')}
+      ${fld('settings.defRisoU', 'Zkušební napětí Riso [V]')}
+      ${fld('settings.defRiso', 'Výchozí Riso [MΩ]')}
+      <label class="f">Pořadí v popisu obvodu${sel('settings.poradi', [['end', 'FA1 – jištění – B16/1, kabel …, popis'], ['afterId', 'FA1- popis – jištění – B16/1, kabel …']])}</label>
+      <div class="f wide" style="padding-top:4px">${sw('settings.odrazky', 'Odrážky (•) u nadpisů kapitol')}</div>
+    </div>`)}
+  </div>`;
+}
+
+function vTexty() {
+  return pageHead('Texty zprávy', 'Kapitoly v pořadí, v jakém budou ve zprávě. Vypnuté kapitoly se nevypíšou.') + `
+  <div class="card"><div class="card-b">
+    <div class="hint">Zástupné značky, které se při generování nahradí:</div>
+    <div class="tokens"><code>{ZKOUSKY}</code> seznam zkoušek <code>{LET}</code> „za 5 let“ <code>{POSUDEK}</code> SCHOPNÉ / NESCHOPNÉ PROVOZU <code>{VZOREC}</code> vzorec kontroly Zs <code>#&nbsp;text</code> tučně na střed</div>
+  </div></div>
+  ${P.sections.map((s, i) => `
+    <div class="sec ${s.on ? '' : 'off'}">
+      <div class="sec-h">
+        <label class="sw" title="Zahrnout do zprávy"><input type="checkbox" data-bind="sections.${i}.on" ${s.on ? 'checked' : ''}><span class="tr"></span></label>
+        ${s.type === 'boards' ? `<div class="auto">${ic('board')}Popis rozvaděčů <span class="hint" style="font-weight:400">– generuje se z karty 3</span></div>` : inp(`sections.${i}.title`, 'Nadpis kapitoly')}
+        <button class="ib" data-act="secUp" data-i="${i}" title="Nahoru">${ic('up')}</button>
+        <button class="ib" data-act="secDown" data-i="${i}" title="Dolů">${ic('down')}</button>
+        ${s.type === 'text' ? `<button class="ib del" data-act="secDel" data-i="${i}" title="Smazat">${ic('trash')}</button>` : '<span style="width:28px"></span>'}
+      </div>
+      ${s.type === 'boards' || !s.on ? '' : `<textarea data-bind="sections.${i}.text" rows="${Math.min(14, Math.max(2, (s.text || '').split('\n').length + 1))}">${hEsc(s.text)}</textarea>`}
+      ${s.type === 'measure' && s.on ? `<div class="special">${ic('auto')}Za tímto textem následují naměřené hodnoty z karty 4</div>` : ''}
+    </div>`).join('')}
+  <button class="btn" data-act="secAdd" style="margin-bottom:24px">${ic('plus')}Přidat kapitolu</button>
+
+  <div class="card">
+    <div class="card-h"><h3>Zkoušky dle ČSN 33 2000-6</h3><span class="hint">vkládají se na místo <code>{ZKOUSKY}</code></span></div>
+    <div class="tw"><table class="t">${P.zkousky.map((z, i) => `<tr><td>${inp(`zkousky.${i}.t`)}</td><td style="width:160px;padding-right:18px">${sel(`zkousky.${i}.v`, ['Vyhovuje', 'Nevyhovuje', 'Neprovedeno', 'Neobsahuje'])}</td></tr>`).join('')}</table></div>
+  </div>`;
+}
+
+function boardList(edit) {
+  const items = P.boards.map((b, i) => {
+    const w = boardWarns(b), n = b.rows.filter(r => r.kind === 'c').length;
+    return `<button class="${i === cur ? 'on' : ''}" data-act="pick" data-i="${i}"><span class="bi">${ic('board')}</span><span class="bt"><b>${hEsc(b.name || '(bez názvu)')}</b><small>${n} ${n === 1 ? 'obvod' : n >= 2 && n <= 4 ? 'obvody' : 'obvodů'}</small></span>${w ? `<span class="wn">${w}</span>` : ''}</button>`;
+  }).join('');
+  return `<aside class="side card"><div class="card-b"><div class="bl">${items || '<div class="hint" style="padding:10px">Zatím žádný rozvaděč</div>'}</div></div>
+    ${edit ? `<div class="side-f"><button class="btn pri sm" data-act="bAdd">${ic('plus')}Rozvaděč</button><span class="grow"></span>${P.boards.length ? `<button class="ib" data-act="bUp" title="Posunout nahoru">${ic('up')}</button><button class="ib" data-act="bDown" title="Posunout dolů">${ic('down')}</button><button class="ib" data-act="bDup" title="Duplikovat">${ic('copy')}</button><button class="ib del" data-act="bDel" title="Smazat">${ic('trash')}</button>` : ''}</div>` : ''}</aside>`;
+}
+
+const rowBtns = i => `<div class="ra"><button class="ib" data-act="rDup" data-i="${i}" title="Kopírovat pod (zvýší číslo)">${ic('copy')}</button><button class="ib" data-act="rUp" data-i="${i}" title="Nahoru">${ic('up')}</button><button class="ib" data-act="rDown" data-i="${i}" title="Dolů">${ic('down')}</button><button class="ib del" data-act="rDel" data-i="${i}" title="Smazat">${ic('trash')}</button></div>`;
+
+function vRozvadece() {
+  const head = pageHead('Rozvaděče', 'Popis rozvaděčů a jejich obvodů. Obvody se automaticky přenesou do měření.');
+  const b = P.boards[cur];
+  if (!b) return head + `<div class="split">${boardList(true)}<div class="card"><div class="empty"><b>Zatím žádný rozvaděč</b>Začněte tlačítkem „+ Rozvaděč“ vlevo.</div></div></div>`;
+  const B = `boards.${cur}`;
+  const rows = b.rows.map((r, i) => r.kind === 'h'
+    ? `<tr class="hd"><td colspan="7">${inp(`${B}.rows.${i}.text`, 'např. 2. řada: zleva')}</td><td>${rowBtns(i)}</td></tr>`
+    : `<tr><td class="oz" style="width:90px">${inp(`${B}.rows.${i}.oz`, 'FA1')}</td>
+         <td style="width:130px">${inp(`${B}.rows.${i}.slovo`, '', '', 'list="dl-slovo"')}</td>
+         <td style="min-width:200px">${inp(`${B}.rows.${i}.pristroj`, 'např. SCHRACK B16/1', '', 'list="dl-pristroj"')}</td>
+         <td style="width:170px">${inp(`${B}.rows.${i}.kabel`, 'CYKY-J 3x2,5mm2', '', 'list="dl-kabel"')}</td>
+         <td style="min-width:150px">${inp(`${B}.rows.${i}.popis`, 'vývod / popis')}</td>
+         <td style="width:50px">${chip(`${B}.rows.${i}.f3`, '3f', 'Třífázový obvod')}</td>
+         <td style="width:56px">${chip(`${B}.rows.${i}.rcd`, 'RCD', 'Proudový chránič / jističochránič')}</td>
+         <td style="width:120px">${rowBtns(i)}</td></tr>`).join('');
+  return head + `<div class="split">${boardList(true)}<div>
+    <div class="card"><div class="card-b"><div class="grid">
+      ${fld(`${B}.name`, 'Název (nadpis)', { ph: 'Rozváděč RD' })}
+      ${fld(`${B}.privod`, 'Přívod', { ph: 'z RE, kabel CYKY-J 4x10mm2' })}
+      ${fld(`${B}.popis`, 'Popis rozvaděče – umístění, typ, v.č., r.v., IP', { wide: true })}
+    </div></div></div>
+    <div class="card">
+      <div class="card-h"><h3>Obvody</h3><span class="hint">3f a RCD se odhadnou z přístroje („B16/3“ = 3f, „/003“ = chránič 30 mA)</span></div>
+      <div class="tw"><table class="t">
+        <tr><th>Označení</th><th>Slovo</th><th>Přístroj</th><th>Kabel</th><th>Popis vývodu</th><th>3f</th><th>RCD</th><th></th></tr>
+        ${rows || `<tr><td colspan="8"><div class="empty" style="padding:24px"><b>Žádné obvody</b>Přidejte obvod nebo řadu níže.</div></td></tr>`}
+      </table></div>
+      <div class="tfoot">
+        <button class="btn pri sm" data-act="rAdd">${ic('plus')}Obvod</button>
+        <button class="btn sm" data-act="hAdd">${ic('heading')}Řada (nadpis)</button>
+        <button class="btn sm" data-act="bulkToggle">${ic('list')}Hromadně…</button>
+      </div>
+      ${bulkOpen ? `<div class="bulk">
+        <label class="f">Prefix<input type="text" id="bk-pre" value="FA" style="width:70px"></label>
+        <label class="f">Od<input type="text" id="bk-od" value="1" style="width:56px"></label>
+        <label class="f">Do<input type="text" id="bk-do" value="10" style="width:56px"></label>
+        <label class="f" style="flex:1;min-width:180px">Přístroj<input type="text" id="bk-pr" list="dl-pristroj" placeholder="ETIMAT10 B16/1"></label>
+        <label class="f">Kabel<input type="text" id="bk-ka" list="dl-kabel" placeholder="CYKY-J 3x2,5mm2"></label>
+        <label class="f">Popis – {n} = číslo<input type="text" id="bk-po" placeholder="byt {n}"></label>
+        <button class="btn pri" data-act="bulkAdd">Přidat</button></div>` : ''}
+    </div></div></div>`;
+}
+
+function vMereni() {
+  const head = pageHead('Měření', 'Naměřené hodnoty po obvodech. Kontrola Zs a chráničů běží průběžně.');
+  const b = P.boards[cur];
+  if (!b) return head + `<div class="split">${boardList(false)}<div class="card"><div class="empty"><b>Nejdřív založte rozvaděče</b>na kartě 3 – Rozvaděče.</div></div></div>`;
+  const B = `boards.${cur}`, S = P.settings, U0 = has(b.u) ? b.u : S.defU;
+  const cards = b.rows.map((r, i) => {
+    if (r.kind === 'h') return `<div class="mgroup">${hEsc(r.text)}</div>`;
+    const R = `${B}.rows.${i}`, m = r.m, st = m.state;
+    let body = '';
+    if (st === 'm') {
+      const zsF = r.f3 ? ig(R + '.m.zs1', 'Zs L1', 'Ω', '', '', 'zs1') + ig(R + '.m.zs2', 'L2', 'Ω', '', '', 'zs2') + ig(R + '.m.zs3', 'L3', 'Ω', '', '', 'zs3')
+                       : ig(R + '.m.zs', 'Zs', 'Ω', '', '', 'zs');
+      body = `<div class="fr">${zsF}${ig(R + '.m.u', 'U', 'V', U0, 's', 'u')}${ig(R + '.m.riso', 'Riso', 'MΩ', 'neměř.', '', 'riso')}${ig(R + '.m.risoU', '/', 'V', S.defRisoU, 's', 'risoU')}</div>`;
+      if (r.f3) body += `<div class="fr">${chip(R + '.m.sled', 'Sled fází')}${m.sled ? ig(R + '.m.u12', '1.2', 'V', '', 's', 'u12') + ig(R + '.m.u13', '1.3', 'V', '', 's', 'u13') + ig(R + '.m.u23', '2.3', 'V', '', 's', 'u23') : ''}</div>`;
+      if (r.rcd) {
+        body += `<div class="rcd-w"><div class="rcd">
+          <span class="h">Test</span><span class="h">IΔ [mA]</span><span class="h">t [ms]</span><span class="h">Uc [V]</span><span class="h">5× [ms]</span>
+          ${[['ac', 'AC'], ['ap', 'A+'], ['am', 'A−']].map(([k, lb]) => `${chip(`${R}.m.${k}.on`, lb)}
+            ${['i', 't', 'uc', 't5'].map(f => inp(`${R}.m.${k}.${f}`, f === 'uc' ? '0' : '', '', `data-col="${k}${f}"`)).join('')}`).join('')}
+          </div><div class="fr" style="flex-direction:column;align-items:flex-start;gap:10px">${ig(R + '.m.idn', 'IΔn', 'mA', parseDevice(r.pristroj, r.oz).idn, 's')}${sw(R + '.m.half', '½× > 300 ms, test tlačítka OK')}</div></div>`;
+      }
+      body += `<div class="fr">${ig(R + '.m.poz', 'Pozn.', '', 'např. měřeno v rozvodnici', 'w')}</div>`;
+    }
+    const seg = [['m', 'Měřeno'], ['n', 'Neměř.'], ['x', 'Vynechat']].map(([v, l]) => `<label><input type="radio" name="st-${r.id}" data-bind="${R}.m.state" value="${v}" ${st === v ? 'checked' : ''}><span>${l}</span></label>`).join('');
+    return `<div class="mc" id="mc-${r.id}"><div class="mc-h">
+      <div class="mc-id"><b>${hEsc(r.oz || '?')}</b><span>${hEsc([r.pristroj, r.popis].filter(has).join(' · '))}</span></div>
+      ${r.f3 ? '<span class="tag">3F</span>' : ''}${r.rcd ? '<span class="tag">RCD</span>' : ''}
+      <span id="chk-${r.id}"></span>
+      <div class="seg">${seg}</div>
+      <button class="ib" data-act="mPrev" data-i="${i}" title="Zkopírovat hodnoty z předchozího obvodu">${ic('prev')}</button>
+    </div>${st === 'm' ? `<div class="mc-b">${body}</div>` : ''}</div>`;
+  }).join('');
+  return head + `<div class="split">${boardList(false)}<div>
+    <div class="card">
+      <div class="card-h"><h3>${hEsc(b.name)}</h3><span class="grow"></span>
+        <button class="btn sm" data-act="fillRiso">Riso ${hEsc(S.defRiso)} MΩ všem prázdným</button>
+        <button class="btn sm" data-act="allState" data-v="m">Vše „Měřeno“</button></div>
+      <div class="card-b"><div class="grid">
+        ${fld(`${B}.mereno`, 'Kde měřeno', { list: 'dl-mereno', wide: true })}
+        ${fld(`${B}.u`, 'Napětí U pro tento rozvaděč [V]', { ph: S.defU })}
+        <div class="f" style="justify-content:flex-end;padding-bottom:8px">${sw(`${B}.pm.on`, 'Měřit i přívod (3f)')}</div>
+      </div>
+      ${b.pm.on ? `<div class="fr" style="margin-top:14px"><b style="min-width:60px">Přívod</b>
+        ${ig(B + '.pm.zs1', 'Zs L1', 'Ω')}${ig(B + '.pm.zs2', 'L2', 'Ω')}${ig(B + '.pm.zs3', 'L3', 'Ω')}${ig(B + '.pm.u', 'U', 'V', U0, 's')}${ig(B + '.pm.riso', 'Riso', 'MΩ', 'neměř.')}
+        ${chip(B + '.pm.sled', 'Sled fází')}
+        ${b.pm.sled ? ig(B + '.pm.u12', '1.2', 'V', '', 's') + ig(B + '.pm.u13', '1.3', 'V', '', 's') + ig(B + '.pm.u23', '2.3', 'V', '', 's') : ''}
+      </div>` : ''}
+      <p class="hint" style="margin:14px 0 0">Tip: <b>Enter</b> skočí na stejné pole v dalším obvodu, <b>Shift+Enter</b> zpět. Prázdné U se doplní z rozvaděče nebo nastavení.</p>
+      </div>
+    </div>
+    ${cards}
+  </div></div>`;
+}
+
+function refreshBadges() {
+  const b = P.boards[cur]; if (!b) return;
+  b.rows.forEach(r => {
+    const el = document.getElementById('chk-' + r.id), card = document.getElementById('mc-' + r.id); if (!el) return;
+    card.classList.remove('s-ok', 's-bad', 's-x');
+    if (r.m.state !== 'm') { el.innerHTML = ''; card.classList.add('s-x'); return; }
+    const w = checkRow(r, b, P.settings);
+    card.classList.add(w.length ? 's-bad' : 's-ok');
+    el.innerHTML = w.length ? `<span class="pill bad" title="${ea(w.join('\n'))}">${ic('alert')}${hEsc(w[0])}${w.length > 1 ? ` +${w.length - 1}` : ''}</span>` : `<span class="pill ok">${ic('check')}OK</span>`;
+  });
+  // počty v postranním seznamu a v záložkách
+  const wn = document.querySelector('.bl button.on .wn'), n = boardWarns(b);
+  const btn = document.querySelector('.bl button.on');
+  if (btn) { if (wn) { if (n) wn.textContent = n; else wn.remove(); } else if (n) btn.insertAdjacentHTML('beforeend', `<span class="wn">${n}</span>`); }
+  renderTabs();
+}
+
+function vNahled() {
+  const warns = [];
+  P.boards.forEach(b => b.rows.forEach(r => checkRow(r, b, P.settings).forEach(w => warns.push(`${b.name} / ${r.oz}: ${w}`))));
+  return pageHead('Náhled a export', 'Takto bude zpráva vypadat ve Wordu.') + `<div class="pv">
+    <aside class="side">
+      <div class="card"><div class="card-h"><h3>Export</h3></div><div class="card-b exp">
+        <button class="btn pri" data-act="docx">${ic('download')}Stáhnout Word (.docx)</button>
+        <button class="btn" data-act="copy" data-w="boards">${ic('clip')}Kopírovat popis rozvaděčů</button>
+        <button class="btn" data-act="copy" data-w="measure">${ic('clip')}Kopírovat měření</button>
+        <button class="btn" data-act="copy" data-w="all">${ic('clip')}Kopírovat celou zprávu</button>
+        <p class="hint" style="margin:4px 0 0">Zkopírovaný text vložíte do své šablony ve Wordu pomocí Cmd+V.</p>
+      </div></div>
+      <div class="card"><div class="card-h"><h3>Kontrola hodnot</h3></div><div class="card-b">
+        ${warns.length ? `<ul class="wl">${warns.map(w => `<li>${ic('alert')}<span>${hEsc(w)}</span></li>`).join('')}</ul>` : `<div class="okbox">${ic('check')}Všechny naměřené hodnoty vyhovují</div>`}
+      </div></div>
+    </aside>
+    <div class="paper-wrap"><div class="paper">${parasToHtml(allParas(P))}</div></div>
+  </div>`;
+}
+
+// ---- události ----
+document.getElementById('tabs').addEventListener('click', e => { const t = e.target.closest('[data-tab]'); if (t) { tab = t.dataset.tab; ls.set(LS_TAB, tab); render(); window.scrollTo(0, 0); } });
+
+app.addEventListener('input', e => {
+  const el = e.target, path = el.dataset.bind; if (!path) return;
+  if (el.type === 'radio' && !el.checked) return;
+  setPath(path, el.type === 'checkbox' ? el.checked : el.value);
+  save();
+  if (tab === 'mereni') refreshBadges();
+  if (path.startsWith('meta.')) { const n = document.getElementById('nextY'); if (n) n.textContent = 'v roce ' + nextYear(P); updSub(); }
+  if (/^boards\.\d+\.name$/.test(path)) { const b = document.querySelector('.bl button.on b'); if (b) b.textContent = el.value || '(bez názvu)'; }
+});
+app.addEventListener('change', e => {
+  const el = e.target, path = el.dataset.bind; if (!path) return;
+  const m = path.match(/^boards\.(\d+)\.rows\.(\d+)\.(\w+)$/);
+  if (m) {
+    const r = P.boards[+m[1]].rows[+m[2]], f = m[3];
+    if (f === 'f3' || f === 'rcd') r.lock = true;
+    if ((f === 'pristroj' || f === 'oz') && !r.lock) {
+      const d = parseDevice(r.pristroj, r.oz);
+      r.f3 = (d.poles || 1) >= 3; r.rcd = d.rcd;
+      const base = `boards.${m[1]}.rows.${m[2]}.`;
+      app.querySelector(`[data-bind="${base}f3"]`).checked = r.f3;
+      app.querySelector(`[data-bind="${base}rcd"]`).checked = r.rcd;
+    }
+    if (f === 'pristroj' || f === 'kabel') updateLib();
+    save();
+  }
+  // změny, které mění rozložení formuláře
+  if (/\.m\.state$/.test(path) || /\.(m|pm)\.sled$/.test(path) || /\.pm\.on$/.test(path) || /^sections\.\d+\.on$/.test(path) || path === 'settings.defRiso') render();
+});
+app.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || e.target.tagName !== 'INPUT') return;
+  const col = e.target.dataset.col; if (!col) return;
+  e.preventDefault();
+  const all = [...app.querySelectorAll(`input[data-col="${col}"]`)];
+  const n = all[all.indexOf(e.target) + (e.shiftKey ? -1 : 1)];
+  if (n) { n.focus(); n.select(); n.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+});
+
+function incLabel(s) { return String(s).replace(/(\d+)(?!.*\d)/, d => String(+d + 1)); }
+function freshIds(o) { if (o && typeof o === 'object') { if ('id' in o) o.id = uid(); Object.values(o).forEach(freshIds); } return o; }
+function move(arr, i, d) { const j = i + d; if (j < 0 || j >= arr.length) return; [arr[i], arr[j]] = [arr[j], arr[i]]; }
+function download(name, blobParts, type) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(blobParts, { type })); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+const fileBase = () => ((P.meta.cislo || 'revize').replace(/[\/\\]/g, '-') + (P.meta.misto ? '-' + P.meta.misto.split(',')[0] : '')).replace(/[^\p{L}\p{N}\-_. ]/gu, '').trim().replace(/\s+/g, '_');
+
+async function copyParas(ps) {
+  const html = `<div style="font-family:'Times New Roman';font-size:11pt">${parasToHtml(ps, true)}</div>`, text = parasToText(ps);
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([text], { type: 'text/plain' }) })]);
+  } catch (err) {
+    const d = document.createElement('div'); d.innerHTML = html; d.style.position = 'fixed'; d.style.left = '-9999px'; document.body.appendChild(d);
+    const r = document.createRange(); r.selectNodeContents(d); const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    document.execCommand('copy'); s.removeAllRanges(); d.remove();
+  }
+  toast('Zkopírováno do schránky');
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]'); if (!t) return;
+  const a = t.dataset.act, i = +t.dataset.i, b = P.boards[cur];
+  switch (a) {
+    case 'new':
+      if (!confirm('Založit novou zprávu? Údaje technika, nastavení a texty kapitol se zachovají, rozvaděče a hlavička se vyprázdní.\n(Aktuální zprávu si předtím můžete uložit tlačítkem „Uložit“.)')) return;
+      P = defaultProject(P); cur = 0; tab = 'hlavicka'; break;
+    case 'open': document.getElementById('fileIn').click(); return;
+    case 'saveJson': download(fileBase() + '.json', [JSON.stringify(P, null, 1)], 'application/json'); toast('Projekt uložen do Stažených'); return;
+    case 'docx': download(fileBase() + '.docx', zipStore(docxFiles(P)), 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'); toast('Word uložen do Stažených'); return;
+    case 'copy': {
+      const w = t.dataset.w;
+      const ps = w === 'all' ? allParas(P) : w === 'boards' ? P.boards.flatMap(x => boardParas(x, P)) : P.boards.flatMap(x => measureParas(x, P));
+      copyParas(ps); return;
+    }
+    case 'loadProf': { const profs = ls.get(LS_PROF, null) || PROFILY; P.technik = clone(profs[i]); toast('Načten profil ' + P.technik.jmeno); break; }
+    case 'saveProf': {
+      const profs = ls.get(LS_PROF, null) || clone(PROFILY);
+      const k = profs.findIndex(p => p.jmeno === P.technik.jmeno);
+      if (k >= 0) profs[k] = clone(P.technik); else profs.push(clone(P.technik));
+      ls.set(LS_PROF, profs); toast('Profil uložen'); break;
+    }
+    case 'secUp': move(P.sections, i, -1); break;
+    case 'secDown': move(P.sections, i, 1); break;
+    case 'secDel': if (!confirm('Smazat kapitolu „' + P.sections[i].title + '“?')) return; P.sections.splice(i, 1); break;
+    case 'secAdd': P.sections.push({ id: uid(), type: 'text', on: true, title: 'Nová kapitola', text: '' }); break;
+    case 'pick': cur = i; break;
+    case 'bAdd': P.boards.push(newBoard({ name: 'Rozváděč R' + (P.boards.length + 1) })); cur = P.boards.length - 1; break;
+    case 'bUp': move(P.boards, cur, -1); cur = Math.max(0, cur - 1); break;
+    case 'bDown': if (cur < P.boards.length - 1) { move(P.boards, cur, 1); cur++; } break;
+    case 'bDup': { const c = freshIds(clone(b)); c.name += ' (kopie)'; P.boards.splice(cur + 1, 0, c); cur++; toast('Rozvaděč zduplikován'); break; }
+    case 'bDel': if (!confirm(`Smazat rozvaděč „${b.name}“ včetně měření?`)) return; P.boards.splice(cur, 1); break;
+    case 'rAdd': {
+      const last = [...b.rows].reverse().find(r => r.kind === 'c');
+      b.rows.push(last ? Object.assign(newRow(), { oz: incLabel(last.oz), slovo: last.slovo, pristroj: last.pristroj, kabel: last.kabel, f3: last.f3, rcd: last.rcd, lock: last.lock }) : newRow({ oz: 'FA1' }));
+      break;
+    }
+    case 'hAdd': b.rows.push(newHeading(`${b.rows.filter(r => r.kind === 'h').length + 1}. řada: `)); break;
+    case 'rDup': { const c = freshIds(clone(b.rows[i])); if (c.kind === 'c') { c.oz = incLabel(c.oz); c.m = newRow().m; } b.rows.splice(i + 1, 0, c); break; }
+    case 'rUp': move(b.rows, i, -1); break;
+    case 'rDown': move(b.rows, i, 1); break;
+    case 'rDel': b.rows.splice(i, 1); break;
+    case 'bulkToggle': bulkOpen = !bulkOpen; break;
+    case 'bulkAdd': {
+      const g = id => document.getElementById(id).value, pre = g('bk-pre'), od = parseInt(g('bk-od')), dd = parseInt(g('bk-do'));
+      if (!(od <= dd) || dd - od > 200) { alert('Zkontrolujte rozsah Od–Do.'); return; }
+      const d = parseDevice(g('bk-pr'), pre);
+      for (let n = od; n <= dd; n++) b.rows.push(newRow({ oz: pre + n, pristroj: g('bk-pr'), kabel: g('bk-ka'), popis: g('bk-po').replace(/\{n\}/g, n), f3: (d.poles || 1) >= 3, rcd: d.rcd }));
+      bulkOpen = false; updateLib(); toast(`Přidáno ${dd - od + 1} obvodů`); break;
+    }
+    case 'mPrev': {
+      const prev = b.rows.slice(0, i).reverse().find(r => r.kind === 'c');
+      if (!prev) return; b.rows[i].m = clone(prev.m); break;
+    }
+    case 'fillRiso': b.rows.forEach(r => { if (r.kind === 'c' && r.m.state === 'm' && !has(r.m.riso)) r.m.riso = P.settings.defRiso; }); break;
+    case 'allState': b.rows.forEach(r => { if (r.kind === 'c') r.m.state = t.dataset.v; }); break;
+    default: return;
+  }
+  save(); render();
+});
+
+document.getElementById('fileIn').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try { const d = JSON.parse(await f.text()); if (!d.meta || !d.boards) throw 0; P = d; cur = 0; save(); render(); toast('Načteno: ' + f.name); }
+  catch (err) { alert('Soubor nejde načíst – není to projekt revizní zprávy.'); }
+  e.target.value = '';
+});
+
+updateLib();
+render();
+</script>
+</body>
+</html>
