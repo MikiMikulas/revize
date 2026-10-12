@@ -2,8 +2,19 @@
 <html lang="cs">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Revizní zprávy</title>
+<meta name="description" content="Sestavení revizních zpráv elektroinstalace – funguje i offline.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Revize">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#171b23" media="(prefers-color-scheme: dark)">
+<meta name="format-detection" content="telephone=no">
 <style>
 :root{
   --bg:#f3f5f8; --panel:#ffffff; --panel-2:#f8f9fb; --ink:#111827; --ink-2:#374151; --muted:#6b7280; --line:#e5e7eb; --line-2:#d1d5db;
@@ -219,6 +230,40 @@ tr:hover .ra,.ra:focus-within{opacity:1}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 .saved{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px}
 .saved i{width:7px;height:7px;border-radius:50%;background:var(--ok);display:inline-block}
+
+/* ---------- iPad / instalovaná aplikace ---------- */
+.top{padding-top:env(safe-area-inset-top)}
+.bar,.steps{padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right))}
+main{padding-bottom:calc(40px + env(safe-area-inset-bottom))}
+.toast{bottom:calc(22px + env(safe-area-inset-bottom))}
+html{-webkit-tap-highlight-color:transparent}
+@media (pointer:coarse){.ib{width:36px;height:36px}.btn.sm{padding:8px 11px}.steps button{min-height:40px}}
+@media (display-mode:standalone){body{overscroll-behavior-y:none}}
+.net{font-size:12px;font-weight:600;color:var(--muted);background:var(--panel-2);border:1px solid var(--line);padding:2px 8px;border-radius:20px;display:none}
+.net.on{display:inline-block}
+.banner{max-width:1440px;margin:12px auto 0;padding:0 max(20px,env(safe-area-inset-left))}
+.banner>div{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--soft);color:var(--soft-ink);border-radius:10px;padding:9px 12px;font-size:13px}
+.banner>div span{flex:1;min-width:200px}
+/* seznam objektů */
+dialog.sheet{border:0;padding:0;background:var(--panel);color:var(--ink);border-radius:16px;box-shadow:var(--shadow-lg);width:min(760px,calc(100vw - 32px));max-height:calc(100dvh - 48px - env(safe-area-inset-top) - env(safe-area-inset-bottom));display:none;flex-direction:column}
+dialog.sheet[open]{display:flex}
+dialog.sheet::backdrop{background:rgba(15,18,24,.45);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.sh-h{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}
+.sh-h h3{margin:0;font-size:17px;font-weight:650;flex:1}
+.sh-t{display:flex;gap:8px;padding:12px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.sh-t input{flex:1;min-width:180px;font-size:16px}
+.sh-b{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px}
+.sh-f{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sh-f .hint{flex:1;min-width:200px}
+.ol{list-style:none;margin:0;padding:0}
+.ol li{display:flex;align-items:center;gap:6px;border-radius:10px}
+.ol li.on{background:var(--soft)}
+.ol li>button.o{flex:1;min-width:0;text-align:left;border:0;background:none;color:inherit;font:inherit;padding:10px 12px;border-radius:10px;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.ol li>button.o:hover{background:var(--panel-2)}
+.ol b{font-weight:620;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ol small{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ol .dot{width:7px;height:7px;border-radius:50%;background:#f59e0b;display:inline-block;margin-right:6px;vertical-align:middle}
+.ol .empty{padding:24px;text-align:center;color:var(--muted);display:block}
 @media (max-width:640px){.bar{padding:10px 16px}.steps,main{padding-left:16px;padding-right:16px}.btn .lbl{display:none}}
 </style>
 </head>
@@ -230,18 +275,21 @@ tr:hover .ra,.ra:focus-within{opacity:1}
       <div style="min-width:0"><h1>Revizní zprávy</h1><div class="sub" id="sub"></div></div>
     </div>
     <span class="grow"></span>
+    <span class="net" id="net">Offline</span>
     <span class="saved" id="saved"><i></i>Uloženo</span>
     <div class="actions">
+      <button class="btn ghost sm" data-act="objs" title="Uložené objekty (⌘O)"><svg class="ic" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/><line x1="9" y1="10" x2="9.01" y2="10"/><line x1="15" y1="10" x2="15.01" y2="10"/></svg><span class="lbl">Objekty</span></button>
       <button class="btn ghost sm" data-act="new" title="Nová zpráva"><svg class="ic" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg><span class="lbl">Nová</span></button>
-      <button class="btn ghost sm" data-act="open" title="Otevřít projekt (.json)"><svg class="ic" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span class="lbl">Otevřít</span></button>
-      <button class="btn ghost sm" data-act="saveJson" title="Uložit projekt do souboru (.json)"><svg class="ic" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg><span class="lbl">Uložit</span></button>
+      <button class="btn ghost sm" data-act="backup" title="Zálohovat všechny objekty do Souborů / iCloud Drive (⌘S)"><svg class="ic" viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/><polyline points="9 14 12 11 15 14"/><line x1="12" y1="11" x2="12" y2="18"/></svg><span class="lbl">Zálohovat</span></button>
       <button class="btn pri" data-act="docx"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span class="lbl">Stáhnout Word</span></button>
     </div>
-    <input type="file" id="fileIn" accept=".json,application/json" hidden>
+    <input type="file" id="fileIn" accept=".json,application/json,text/plain" hidden>
   </div>
   <nav class="steps" id="tabs"></nav>
 </header>
+<div class="banner" id="banner" hidden></div>
 <main id="app"></main>
+<dialog class="sheet" id="objDlg"></dialog>
 <div class="toast" id="toast"></div>
 <datalist id="dl-mereno">
   <option value="měřeno v rozváděči a na konci jednotlivých okruhů">
@@ -705,8 +753,33 @@ if (typeof module !== 'undefined') module.exports = { parseDevice, checkRow, sam
 <script>
 const LS_P = 'revize.project.v1', LS_PROF = 'revize.profiles.v1', LS_LIB = 'revize.lib.v1', LS_TAB = 'revize.tab';
 const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
-             set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
-let P = ls.get(LS_P, null) || sampleProject();
+             set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } },
+             del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
+
+// ---- uložené objekty: každý objekt (zpráva) má vlastní klíč, seznam drží souhrn pro rychlé zobrazení ----
+const LS_IDX = 'revize.objects.v1', LS_CUR = 'revize.cur', LS_BAK = 'revize.lastBackup', objKey = id => 'revize.obj.' + id;
+const longId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const objSummary = p => ({ id: p.id, cislo: p.meta.cislo || '', misto: p.meta.misto || '', provozovatel: p.meta.provozovatel || '', boards: p.boards.length, updated: p.updated || Date.now() });
+const objIndex = () => ls.get(LS_IDX, []);
+function objStore(p) {
+  if (!ls.set(objKey(p.id), p)) return false;
+  const idx = objIndex().filter(o => o.id !== p.id); idx.unshift(objSummary(p));
+  return ls.set(LS_IDX, idx);
+}
+function objLoad(id) { const p = ls.get(objKey(id), null); if (p && !p.id) p.id = id; return p; }
+function objRemove(id) { ls.del(objKey(id)); ls.set(LS_IDX, objIndex().filter(o => o.id !== id)); }
+function objInit() {
+  let idx = objIndex();
+  if (!idx.length) { // první spuštění nebo přechod ze staré verze s jedinou zprávou
+    const old = ls.get(LS_P, null) || sampleProject();
+    old.id = old.id || longId(); old.updated = old.updated || Date.now();
+    if (objStore(old)) ls.del(LS_P);
+    ls.set(LS_CUR, old.id); idx = objIndex();
+  }
+  const id = ls.get(LS_CUR, null);
+  return (idx.some(o => o.id === id) && objLoad(id)) || objLoad(idx[0].id);
+}
+let P = objInit();
 let tab = ls.get(LS_TAB, 'hlavicka');
 let cur = 0, bulkOpen = false;
 const app = document.getElementById('app');
@@ -727,12 +800,27 @@ const SVG = {
   heading: '<path d="M4 6h16M4 12h10M4 18h6"/>',
   prev: '<polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/>',
   user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+  share: '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>',
+  upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
+  cloud: '<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/><polyline points="9 14 12 11 15 14"/><line x1="12" y1="11" x2="12" y2="18"/>',
   auto: '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>'
 };
 const ic = n => `<svg class="ic" viewBox="0 0 24 24">${SVG[n]}</svg>`;
 
 let saveT, toastT;
-function save() { const s = document.getElementById('saved'); s.style.opacity = .4; clearTimeout(saveT); saveT = setTimeout(() => { ls.set(LS_P, P); s.style.opacity = 1; }, 300); }
+let quotaWarned = false;
+function save() {
+  const s = document.getElementById('saved'); s.style.opacity = .4; clearTimeout(saveT);
+  saveT = setTimeout(() => {
+    saveT = null; P.updated = Date.now();
+    if (objStore(P)) { ls.set(LS_CUR, P.id); s.style.opacity = 1; s.lastChild.textContent = 'Uloženo'; }
+    else { s.lastChild.textContent = 'Neuloženo!'; if (!quotaWarned) { quotaWarned = true; alert('Úložiště v iPadu je plné – změny se neukládají. Zálohujte objekty a smažte staré.'); } }
+    updBanner();
+  }, 300);
+}
+function flushSave() { if (saveT) { clearTimeout(saveT); saveT = null; P.updated = Date.now(); objStore(P); ls.set(LS_CUR, P.id); } }
+function switchTo(p) { flushSave(); P = p; cur = 0; ls.set(LS_CUR, P.id); updateLib(); render(); window.scrollTo(0, 0); }
 function toast(t) { const el = document.getElementById('toast'); el.innerHTML = ic('check') + hEsc(t); el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2200); }
 const status = toast;
 function updSub() { document.getElementById('sub').textContent = [P.meta.cislo && 'Zpráva č. ' + P.meta.cislo, P.meta.misto].filter(Boolean).join(' · ') || 'Nová zpráva'; }
@@ -1051,6 +1139,113 @@ function download(name, blobParts, type) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(blobParts, { type })); a.download = name;
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
 }
+// Na iPadu nabídne systémové „Sdílet“ (Uložit do Souborů / iCloud Drive, Mail, AirDrop, Word…), jinde klasické stažení.
+const touchDevice = () => matchMedia('(pointer:coarse)').matches;
+async function shareFile(name, blobParts, type) {
+  const file = new File(blobParts, name, { type });
+  if (touchDevice() && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file] }); return 'shared'; }
+    catch (e) { if (e.name === 'AbortError') return 'cancel'; }
+  }
+  download(name, blobParts, type); return 'downloaded';
+}
+const today = () => new Date().toISOString().slice(0, 10);
+const fmtTime = t => t ? new Date(t).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'nikdy';
+const notBackedUp = () => { const b = ls.get(LS_BAK, 0); return objIndex().filter(o => o.updated > b); };
+
+async function backupAll() {
+  flushSave();
+  const objects = objIndex().map(o => objLoad(o.id)).filter(Boolean);
+  const data = { format: 'revize-zaloha', v: 1, created: new Date().toISOString(), objects };
+  const r = await shareFile(`Revize-zaloha-${today()}.json`, [JSON.stringify(data)], 'application/json');
+  if (r === 'cancel') return;
+  ls.set(LS_BAK, Date.now()); updBanner(); if (objDlg.open) renderObjs();
+  toast(r === 'shared' ? `Záloha ${objects.length} objektů připravena` : `Záloha ${objects.length} objektů uložena do Stažených`);
+}
+
+function importData(d, name) {
+  if (d && d.format === 'revize-zaloha' && Array.isArray(d.objects)) {
+    let added = 0, skipped = 0;
+    d.objects.forEach(o => {
+      if (!o || !o.meta || !o.boards) return;
+      o.id = o.id || longId(); o.updated = o.updated || Date.now();
+      const local = objIndex().find(x => x.id === o.id);
+      if (local && local.updated >= o.updated) { skipped++; return; }
+      objStore(o); added++;
+    });
+    const fresh = objLoad(P.id); if (fresh) P = fresh;
+    render(); if (objDlg.open) renderObjs(); updBanner();
+    toast(`Obnoveno ${added} objektů` + (skipped ? `, ${skipped} přeskočeno (v iPadu jsou novější)` : ''));
+    return;
+  }
+  if (!d || !d.meta || !d.boards) throw 0;
+  if (d.id && objIndex().some(o => o.id === d.id)) {
+    if (!confirm(`Objekt „${d.meta.misto || d.meta.cislo || 'bez názvu'}“ už v iPadu je. Přepsat ho verzí ze souboru?\n(Zrušit = uložit jako nový objekt.)`)) d.id = longId();
+  }
+  d.id = d.id || longId(); d.updated = Date.now(); objStore(d);
+  switchTo(d); if (objDlg.open) objDlg.close(); toast('Načteno: ' + name);
+}
+
+// ---- dialog s objekty ----
+const objDlg = document.getElementById('objDlg');
+function openObjs() {
+  flushSave();
+  objDlg.innerHTML = `
+    <div class="sh-h"><h3>Uložené objekty</h3><button class="ib" data-act="objClose" title="Zavřít">${ic('x')}</button></div>
+    <div class="sh-t"><input type="search" id="objQ" placeholder="Hledat podle adresy, čísla zprávy, provozovatele…" autocomplete="off">
+      <button class="btn pri sm" data-act="new">${ic('plus')}Nový objekt</button></div>
+    <div class="sh-b"><ul class="ol" id="objList"></ul></div>
+    <div class="sh-f"><span class="hint" id="objInfo"></span>
+      <button class="btn sm" data-act="open">${ic('upload')}Importovat soubor</button>
+      <button class="btn sm" data-act="backup">${ic('cloud')}Zálohovat vše</button></div>`;
+  renderObjs(); objDlg.showModal();
+  if (!touchDevice()) document.getElementById('objQ').focus();
+}
+function renderObjs() {
+  const q = (document.getElementById('objQ')?.value || '').toLowerCase().trim();
+  const bak = ls.get(LS_BAK, 0), all = objIndex().sort((a, b) => b.updated - a.updated);
+  const list = all.filter(o => !q || [o.misto, o.cislo, o.provozovatel].join(' ').toLowerCase().includes(q));
+  const nb = all.filter(o => o.updated > bak).length;
+  document.getElementById('objList').innerHTML = list.length ? list.map(o => `
+    <li class="${o.id === P.id ? 'on' : ''}">
+      <button class="o" data-act="objOpen" data-id="${o.id}">
+        <b>${o.updated > bak ? '<i class="dot" title="Změněno od poslední zálohy"></i>' : ''}${hEsc(o.misto || '(bez adresy)')}</b>
+        <small>${hEsc([o.cislo && 'č. ' + o.cislo, o.provozovatel, o.boards + ' rozv.', 'upraveno ' + fmtTime(o.updated)].filter(Boolean).join(' · '))}</small>
+      </button>
+      <button class="ib" data-act="objExp" data-id="${o.id}" title="Odeslat / uložit tento objekt">${ic('share')}</button>
+      <button class="ib" data-act="objDup" data-id="${o.id}" title="Duplikovat (např. pro příští revizi)">${ic('copy')}</button>
+      <button class="ib del" data-act="objDel" data-id="${o.id}" title="Smazat">${ic('trash')}</button>
+    </li>`).join('') : `<li class="empty">${q ? 'Nic nenalezeno' : 'Zatím žádné objekty'}</li>`;
+  document.getElementById('objInfo').textContent = `${all.length} objektů · poslední záloha: ${fmtTime(bak)}` + (nb ? ` · ${nb} nezálohováno` : '');
+}
+objDlg.addEventListener('input', e => { if (e.target.id === 'objQ') renderObjs(); });
+objDlg.addEventListener('click', e => { if (e.target === objDlg) objDlg.close(); }); // klepnutí mimo
+
+// ---- upozornění: záloha / instalace na plochu ----
+const standalone = () => navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+function updBanner() {
+  const el = document.getElementById('banner'), nb = notBackedUp().length, bak = ls.get(LS_BAK, 0);
+  let html = '';
+  if (nb && Date.now() - bak > 864e5 && Date.now() - ls.get('revize.bakSnooze', 0) > 864e5)
+    html = `<div>${ic('cloud')}<span>${nb === 1 ? '1 objekt není zálohovaný' : nb + ' objektů není zálohováno'} (poslední záloha: ${fmtTime(bak)}).</span>
+      <button class="btn pri sm" data-act="backup">Zálohovat do iCloudu</button><button class="btn ghost sm" data-act="bakSnooze">Později</button></div>`;
+  else if (touchDevice() && !standalone() && !ls.get('revize.installHid', false))
+    html = `<div>${ic('plus')}<span>Tip: v Safari klepněte na <b>Sdílet → Přidat na plochu</b>. Aplikace pak poběží přes celou obrazovku, offline a iPadOS jí data nesmaže.</span>
+      <button class="btn ghost sm" data-act="installHide">Skrýt</button></div>`;
+  el.innerHTML = html; el.hidden = !html;
+}
+function updNet() { document.getElementById('net').classList.toggle('on', !navigator.onLine); }
+addEventListener('online', () => { updNet(); updBanner(); if (notBackedUp().length) toast('Jste online – nezapomeňte zálohovat'); });
+addEventListener('offline', () => { updNet(); toast('Offline – vše se dál ukládá v iPadu'); });
+addEventListener('pagehide', flushSave);
+document.addEventListener('visibilitychange', () => { if (document.hidden) flushSave(); });
+document.addEventListener('keydown', e => {
+  if (!(e.metaKey || e.ctrlKey) || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (k === 's') { e.preventDefault(); backupAll(); }
+  else if (k === 'o') { e.preventDefault(); objDlg.open ? objDlg.close() : openObjs(); }
+});
+
 const fileBase = () => ((P.meta.cislo || 'revize').replace(/[\/\\]/g, '-') + (P.meta.misto ? '-' + P.meta.misto.split(',')[0] : '')).replace(/[^\p{L}\p{N}\-_. ]/gu, '').trim().replace(/\s+/g, '_');
 
 async function copyParas(ps) {
@@ -1069,12 +1264,38 @@ document.addEventListener('click', e => {
   const t = e.target.closest('[data-act]'); if (!t) return;
   const a = t.dataset.act, i = +t.dataset.i, b = P.boards[cur];
   switch (a) {
-    case 'new':
-      if (!confirm('Založit novou zprávu? Údaje technika, nastavení a texty kapitol se zachovají, rozvaděče a hlavička se vyprázdní.\n(Aktuální zprávu si předtím můžete uložit tlačítkem „Uložit“.)')) return;
-      P = defaultProject(P); cur = 0; tab = 'hlavicka'; break;
+    case 'new': {
+      // nový objekt – technik, nastavení a texty kapitol se převezmou z aktuálního, předchozí objekt zůstává uložený
+      flushSave(); const n = defaultProject(P); n.id = longId(); n.updated = Date.now(); objStore(n);
+      tab = 'hlavicka'; ls.set(LS_TAB, tab); switchTo(n); if (objDlg.open) objDlg.close(); toast('Založen nový objekt'); return;
+    }
+    case 'objs': openObjs(); return;
+    case 'objClose': objDlg.close(); return;
+    case 'objOpen': { const p = t.dataset.id === P.id ? P : objLoad(t.dataset.id); if (p) switchTo(p); objDlg.close(); return; }
+    case 'objDup': {
+      flushSave(); const src = objLoad(t.dataset.id); if (!src) return;
+      const c = clone(src); c.id = longId(); c.updated = Date.now(); c.meta.cislo = ''; objStore(c);
+      renderObjs(); toast('Objekt zduplikován – doplňte nové číslo zprávy'); return;
+    }
+    case 'objDel': {
+      const o = objIndex().find(x => x.id === t.dataset.id); if (!o) return;
+      if (!confirm(`Smazat objekt „${o.misto || o.cislo || 'bez názvu'}“ z iPadu?` + (o.updated > ls.get(LS_BAK, 0) ? '\n\nPozor: od poslední zálohy byl změněn.' : ''))) return;
+      if (o.id === P.id) clearTimeout(saveT), saveT = null;
+      objRemove(o.id);
+      if (o.id === P.id) { const nx = objIndex()[0]; if (nx) switchTo(objLoad(nx.id)); else { const n = defaultProject(P); n.id = longId(); objStore(n); switchTo(n); } }
+      renderObjs(); updBanner(); return;
+    }
+    case 'objExp': {
+      flushSave(); const p = t.dataset.id === P.id ? P : objLoad(t.dataset.id); if (!p) return;
+      const prev = P; P = p; const name = fileBase() + '.json'; P = prev;
+      shareFile(name, [JSON.stringify(p, null, 1)], 'application/json').then(r => r === 'downloaded' && toast('Objekt uložen do Stažených')); return;
+    }
+    case 'backup': backupAll(); return;
+    case 'bakSnooze': ls.set('revize.bakSnooze', Date.now()); updBanner(); return;
+    case 'installHide': ls.set('revize.installHid', true); updBanner(); return;
     case 'open': document.getElementById('fileIn').click(); return;
-    case 'saveJson': download(fileBase() + '.json', [JSON.stringify(P, null, 1)], 'application/json'); toast('Projekt uložen do Stažených'); return;
-    case 'docx': download(fileBase() + '.docx', zipStore(docxFiles(P)), 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'); toast('Word uložen do Stažených'); return;
+    case 'saveJson': shareFile(fileBase() + '.json', [JSON.stringify(P, null, 1)], 'application/json').then(r => r === 'downloaded' && toast('Projekt uložen do Stažených')); return;
+    case 'docx': shareFile(fileBase() + '.docx', zipStore(docxFiles(P)), 'application/vnd.openxmlformats-officedocument.wordprocessingml.document').then(r => r === 'downloaded' && toast('Word uložen do Stažených')); return;
     case 'copy': {
       const w = t.dataset.w;
       const ps = w === 'all' ? allParas(P) : w === 'boards' ? P.boards.flatMap(x => boardParas(x, P)) : P.boards.flatMap(x => measureParas(x, P));
@@ -1128,13 +1349,16 @@ document.addEventListener('click', e => {
 
 document.getElementById('fileIn').addEventListener('change', async e => {
   const f = e.target.files[0]; if (!f) return;
-  try { const d = JSON.parse(await f.text()); if (!d.meta || !d.boards) throw 0; P = d; cur = 0; save(); render(); toast('Načteno: ' + f.name); }
-  catch (err) { alert('Soubor nejde načíst – není to projekt revizní zprávy.'); }
+  try { importData(JSON.parse(await f.text()), f.name); }
+  catch (err) { alert('Soubor nejde načíst – není to projekt ani záloha revizních zpráv.'); }
   e.target.value = '';
 });
 
 updateLib();
 render();
+updNet(); updBanner();
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
 </body>
 </html>
